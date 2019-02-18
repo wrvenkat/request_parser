@@ -31,3 +31,16 @@ print multiValDict['new_key_1']
 #setdefaultlist check
 multiValDict.setlistdefault('new_key_2',['default_name1','default_name2'])
 print multiValDict['new_key_2']
+
+#update() test
+multiValDict2 = MultiValueDict({'name1': ['name1', 'name2'],'position2':['mason']})
+#this one errors out saying more than 1 arg received
+#multiValDict.update('asdasd', 'bhjvkhj')
+#this one errors out "AttributeError: 'str' object has no attribute 'items'"
+#multiValDict.update('asdasd123123')
+#this one succeeds!
+#multiValDict.update(multiValDict2)
+#the following one succeeds but should be noted that ['name1', 'name2'] and ['mason']
+#are all converted into another list i.e [['name1', 'name2']] and [['mason']]
+multiValDict.update({'name1': ['name1', 'name2'],'position2':['mason']})
+print multiValDict

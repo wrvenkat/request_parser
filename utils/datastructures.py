@@ -1,7 +1,7 @@
+import copy
+
 class MultiValueDictKeyError(KeyError):
     pass
-
-#Fix: __deepcopy__, __getstate__, copy methods
 
 class MultiValueDict(dict):
     """
@@ -54,16 +54,18 @@ class MultiValueDict(dict):
             for k, v in self.lists()
         ])
 
- #   def __deepcopy__(self, memo):
- #       result = self.__class__()
- #       memo[id(self)] = result
- #       for key, value in dict.items(self):
- #           dict.__setitem__(result, copy.deepcopy(key, memo),
- #                            copy.deepcopy(value, memo))
- #       return result
+    def __deepcopy__(self, memo):
+        result = self.__class__()
+        memo[id(self)] = result
+        for key, value in dict.items(self):
+            dict.__setitem__(result, copy.deepcopy(key, memo),
+                            copy.deepcopy(value, memo))
+        return result
 
-    #def __getstate__(self):
-    #    return {**self.__dict__, '_data': {k: self._getlist(k) for k in self}}
+    def __getstate__(self):
+        multi_value_state_dict = dict((k, self._getlist(k)) for k in self)
+        _data_dict = dict('_data', multi_value_state_dict)
+        return {self.__dict__, _data_dict}
 
     def __setstate__(self, obj_dict):
         data = obj_dict.pop('_data', {})
@@ -167,9 +169,9 @@ class MultiValueDict(dict):
         for key in self:
             yield self[key]
 
-#    def copy(self):
-#        """Return a shallow copy of this object."""
-#        return copy.copy(self)
+    def copy(self):
+        """Return a shallow copy of this object."""
+        return copy.copy(self)
 
     def update(self, *args, **kwargs):
         """Extend rather than replace existing key lists."""
@@ -181,6 +183,7 @@ class MultiValueDict(dict):
                 for key, value_list in other_dict.lists():
                     self.setlistdefault(key).extend(value_list)
             else:
+                print "Here!"
                 try:
                     for key, value in other_dict.items():
                         self.setlistdefault(key).append(value)
