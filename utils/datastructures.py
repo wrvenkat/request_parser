@@ -46,32 +46,46 @@ class MultiValueDict(dict):
             return []
 
     def __setitem__(self, key, value):
+        #set the value as a list i.e [value]
         super(MultiValueDict, self).__setitem__(key, [value])
 
     def __copy__(self):
+        #returns a list of tuples of (key, value_list) of MultiValueDict for 
+        #a shallow copy
         return self.__class__([
             (k, v[:])
             for k, v in self.lists()
         ])
 
     def __deepcopy__(self, memo):
+        #create an empty instance of MultiValueDict
         result = self.__class__()
+        #in the memo dict, set the id(self)'s value as the new instance
         memo[id(self)] = result
+        #for each (key, value) tuple in self,
         for key, value in dict.items(self):
+            #populate result dictionary with a key : [value] copy
+            #where each of key and value are deep copies
             dict.__setitem__(result, copy.deepcopy(key, memo),
                             copy.deepcopy(value, memo))
         return result
 
     def __getstate__(self):
-        #Fixed dictionary comprehension here 
+        #Fixed dictionary comprehension here
         multi_value_state_dict = dict((k, self._getlist(k)) for k in self)
-        _data_dict = dict('_data', multi_value_state_dict)
-        return {self.__dict__, _data_dict}
+        return {self.__dict__,{'_data': multi_value_state_dict}}
 
     def __setstate__(self, obj_dict):
+        #retrieve the dictionary associated with '_data' key
+        #with a default value being an empty dictionary
         data = obj_dict.pop('_data', {})
+        #for each (key, value) tuple in data
         for k, v in data.items():
+            #create the list with value v for key k
             self.setlist(k, v)
+        #update the attribute dictionary from the returned obj_dict
+        #the update automatically iterates through the key, value pair in #obj_dict and populates the attributes; since there's no parameter
+        #with '_dict' key, that item is ignored.
         self.__dict__.update(obj_dict)
 
     def get(self, key, default=None):
@@ -102,6 +116,7 @@ class MultiValueDict(dict):
             return default
         else:
             if force_list:
+                #return a copy of values as a list
                 values = list(values) if values is not None else None
             return values
 
@@ -129,7 +144,7 @@ class MultiValueDict(dict):
 
     def setdefault(self, key, default=None):
         """
-        Set the default value for a key not in the dict
+        Set the default value for a key if key is not in the dict
         """
         if key not in self:
             self[key] = default
@@ -139,7 +154,7 @@ class MultiValueDict(dict):
 
     def setlistdefault(self, key, default_list=None):
         """
-        Set a default list for a key not in the dict
+        Set a default list for a key if key not in the dict
         """
         if key not in self:
             if default_list is None:
@@ -176,21 +191,38 @@ class MultiValueDict(dict):
 
     def update(self, *args, **kwargs):
         """Extend rather than replace existing key lists."""
+
+        #accepts only 1 value for args
         if len(args) > 1:
             raise TypeError("update expected at most 1 argument, got %d" % len(args))
+        #if there's only 1 for args, then it's assumed to be a dictionary
         if args:
             other_dict = args[0]
+            #if the dictionary is another MultiValueDict,
             if isinstance(other_dict, MultiValueDict):
+                #then for each (key, value_list) tuple,
                 for key, value_list in other_dict.lists():
+                    #the existing one is extended
                     self.setlistdefault(key).extend(value_list)
+            #if its not a MultiValueDict,
             else:
-                print "Here!"
+                #then assuming it's some dictionary, it's iterated upon
                 try:
+                    #for each (key, value) tuple in the other_dict,
                     for key, value in other_dict.items():
+                        #the existing one is /appended/ since we don't know
+                        #the type of the value, we can only append and not
+                        #extend
                         self.setlistdefault(key).append(value)
+                #if our assumption of other_dict being another dictionary
+                #is wrong
                 except TypeError:
                     raise ValueError("MultiValueDict.update() takes either a MultiValueDict or dictionary")
+        #now we parse the kwargs, which is a dictionary
+        #so, for each (key, value) tuple in the kwargs dictionary
         for key, value in kwargs.items():
+            #the value for each key is /appended/ since we don't know if value
+            #will be another list
             self.setlistdefault(key).append(value)
 
     def dict(self):
