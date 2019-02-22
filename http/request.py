@@ -33,6 +33,11 @@ class RawPostDataException(Exception):
     """
     pass
 
+class NoHostFoundException(Exception):
+    """
+    Raised when no HOST header is not present in the request.
+    """
+
 class HttpRequest:
     """A basic HTTP request."""
 
@@ -63,49 +68,27 @@ class HttpRequest:
             return '<%s>' % self.__class__.__name__
         return '<%s: %s %r>' % (self.__class__.__name__, self.method, self.get_full_path())
 
-    def _get_raw_host(self):
+    def get_host(self):
         """
-        Return the HTTP host using the environment or request headers. Skip
-        allowed hosts protection, so may return an insecure host.
+        Return the HTTP host from the request URL if we're operating under a web-proxy or
+        from the request headers.
         """
-        # We try three options, in order of decreasing preference.
-        if settings.USE_X_FORWARDED_HOST and (
-                'HTTP_X_FORWARDED_HOST' in self.META):
-            host = self.META['HTTP_X_FORWARDED_HOST']
+
+        if settings.WEB_PROXY:
+            #TODO: parse the URL to get the destination domain
+            host = ''
         elif 'HTTP_HOST' in self.META:
             host = self.META['HTTP_HOST']
         else:
-            # Reconstruct the host using the algorithm from PEP 333.
-            host = self.META['SERVER_NAME']
-            server_port = self.get_port()
-            if server_port != ('443' if self.is_secure() else '80'):
-                host = '%s:%s' % (host, server_port)
+            host = ''
+            raise NoHostFoundException("No HOST header found in the HTTP request")
         return host
-
-    def get_host(self):
-        """Return the HTTP host using the environment or request headers."""
-        host = self._get_raw_host()
-
-        # Allow variants of localhost if ALLOWED_HOSTS is empty and DEBUG=True.
-        allowed_hosts = settings.ALLOWED_HOSTS
-        if settings.DEBUG and not allowed_hosts:
-            allowed_hosts = ['localhost', '127.0.0.1', '[::1]']
-
-        domain, port = split_domain_port(host)
-        if domain and validate_host(domain, allowed_hosts):
-            return host
-        else:
-            msg = "Invalid HTTP_HOST header: %r." % host
-            if domain:
-                msg += " You may need to add %r to ALLOWED_HOSTS." % domain
-            else:
-                msg += " The domain name provided is not valid according to RFC 1034/1035."
-            raise DisallowedHost(msg)
 
     def get_port(self):
         """Return the port number for the request as a string."""
-        if settings.USE_X_FORWARDED_PORT and 'HTTP_X_FORWARDED_PORT' in self.META:
-            port = self.META['HTTP_X_FORWARDED_PORT']
+        if settings.WEB_PROXY:
+            #TODO: If we're processing web-proxy requests, then we get the port from web-proxy
+            port = ''
         else:
             port = self.META['SERVER_PORT']
         return str(port)
