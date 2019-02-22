@@ -388,6 +388,7 @@ class QueryDict(MultiMultiPartValueDict):
         
         #TODO 1: Decide whether the constructor should accept the query-string to be parsed.
         #TODO 2: Convert query_string to bytes
+        #TODO 3: Need to call urlparse on the query_string before it's being passed on to limited_parse_qsl?
 
         if isinstance(query_string, bytes):
             # query_string normally contains URL-encoded data, a subset of ASCII.
