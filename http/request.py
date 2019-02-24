@@ -211,7 +211,7 @@ class HttpRequest:
 
             try:
                 #At this point, remember that, self.read() expects self._stream to be set to an appropriate
-                # source of bytes by a corresponding request subclass (e.g. WSGIRequest).
+                #source of bytes by a corresponding request subclass (e.g. WSGIRequest).
                 self._body = self.read()
             except IOError as e:
                 raise UnreadablePostError(*e.args) from e
@@ -291,8 +291,9 @@ class HttpRequest:
         )
         yield from self
 
-    def readlines(self):
-        return list(self)
+    #Why is this being returned here? I don't understand - Candudate for removal.
+    #def readlines(self):
+    #    return list(self)
 
 class QueryDict(MultiMultiPartValueDict):
     """
