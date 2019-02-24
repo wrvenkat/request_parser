@@ -205,6 +205,7 @@ class HttpRequest:
                 raise RawPostDataException("You cannot access body after reading from request's data stream")
 
             # Limit the maximum request data size that will be handled in-memory.
+            #TODO: Figure out a way to do BufferedReading when in-memory body parsing is not possible
             if (settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None and
                     int(self.META.get('CONTENT_LENGTH') or 0) > settings.DATA_UPLOAD_MAX_MEMORY_SIZE):
                 raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
@@ -235,6 +236,8 @@ class HttpRequest:
         if self.content_type == 'multipart/form-data':
             if hasattr(self, '_body'):
                 # Use already read data
+                #remember that we're not providing self._stream although at this point
+                #even though, self._stream would point to BytesIO(self._body)
                 data = BytesIO(self._body)
             else:
                 data = self
