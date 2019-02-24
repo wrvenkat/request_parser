@@ -43,7 +43,10 @@ class HttpRequest:
 
     # The encoding used in GET/POST dicts. None means use default setting.
     _encoding = None
-    #_upload_handlers = []
+    #We might need the below so that for "multipar/form-data" file uploads,
+    #we use the TemporaryFileUpload handler class to save the uploaded file
+    #to be handled under our context
+    _upload_handlers = []
 
     def __init__(self):
         # WARNING: The `WSGIRequest` subclass doesn't call `super`.
@@ -103,33 +106,24 @@ class HttpRequest:
         # RFC 3986 requires query string arguments to be in the ASCII range.
         # Rather than crash if this doesn't happen, we encode defensively.
         return '%s%s%s' % (
-            escape_uri_path(path),
+            #add a '/' if force_append_slash is true and the path doesn't end with '/'
+            escape_uri_path(path),            
             '/' if force_append_slash and not path.endswith('/') else '',
             ('?' + iri_to_uri(self.META.get('QUERY_STRING', ''))) if self.META.get('QUERY_STRING', '') else ''
         )
 
-    def get_signed_cookie(self, key, default=RAISE_ERROR, salt='', max_age=None):
+    def get_cookie(self, key, default=None):
         """
-        Attempt to return a signed cookie. If the signature fails or the
-        cookie has expired, raise an exception, unless the `default` argument
-        is provided,  in which case return that value.
+        Return a cookie by name.
         """
         try:
             cookie_value = self.COOKIES[key]
         except KeyError:
-            if default is not RAISE_ERROR:
+            return default
+        else:
+            if cookie_value is None:
                 return default
-            else:
-                raise
-        try:
-            value = signing.get_cookie_signer(salt=key + salt).unsign(
-                cookie_value, max_age=max_age)
-        except signing.BadSignature:
-            if default is not RAISE_ERROR:
-                return default
-            else:
-                raise
-        return value
+        return cookie_value
 
     def get_raw_uri(self):
         """
@@ -142,61 +136,18 @@ class HttpRequest:
             path=self.get_full_path(),
         )
 
-    def build_absolute_uri(self, location=None):
-        """
-        Build an absolute URI from the location and the variables available in
-        this request. If no ``location`` is specified, build the absolute URI
-        using request.get_full_path(). If the location is absolute, convert it
-        to an RFC 3987 compliant URI and return it. If location is relative or
-        is scheme-relative (i.e., ``//example.com/``), urljoin() it to a base
-        URL constructed from the request variables.
-        """
-        if location is None:
-            # Make it an absolute url (but schemeless and domainless) for the
-            # edge case that the path starts with '//'.
-            location = '//%s' % self.get_full_path()
-        bits = urlsplit(location)
-        if not (bits.scheme and bits.netloc):
-            # Handle the simple, most common case. If the location is absolute
-            # and a scheme or host (netloc) isn't provided, skip an expensive
-            # urljoin() as long as no path segments are '.' or '..'.
-            if (bits.path.startswith('/') and not bits.scheme and not bits.netloc and
-                    '/./' not in bits.path and '/../' not in bits.path):
-                # If location starts with '//' but has no netloc, reuse the
-                # schema and netloc from the current request. Strip the double
-                # slashes and continue as if it wasn't specified.
-                if location.startswith('//'):
-                    location = location[2:]
-                location = self._current_scheme_host + location
-            else:
-                # Join the constructed URL with the provided location, which
-                # allows the provided location to apply query strings to the
-                # base path.
-                location = urljoin(self._current_scheme_host + self.path, location)
-        return iri_to_uri(location)
-
     @cached_property
     def _current_scheme_host(self):
         return '{}://{}'.format(self.scheme, self.get_host())
 
     def _get_scheme(self):
         """
-        Hook for subclasses like WSGIRequest to implement. Return 'http' by
-        default.
+        Retrun scheme
         """
-        return 'http'
+        return self.META['SCHEME']
 
     @property
     def scheme(self):
-        if settings.SECURE_PROXY_SSL_HEADER:
-            try:
-                header, value = settings.SECURE_PROXY_SSL_HEADER
-            except ValueError:
-                raise ImproperlyConfigured(
-                    'The SECURE_PROXY_SSL_HEADER setting must be a tuple containing two values.'
-                )
-            if self.META.get(header) == value:
-                return 'https'
         return self._get_scheme()
 
     def is_secure(self):
@@ -216,12 +167,14 @@ class HttpRequest:
         dictionary has already been created, remove and recreate it on the
         next access (so that it is decoded correctly).
         """
+        #TODO: Need to check when the GET/POST dictonary is redone
         self._encoding = val
         if hasattr(self, 'GET'):
             del self.GET
         if hasattr(self, '_post'):
             del self._post
 
+    #ALL ABOUT FILE UPLOADS!
     def _initialize_handlers(self):
         self._upload_handlers = [uploadhandler.load_handler(handler, self)
                                  for handler in settings.FILE_UPLOAD_HANDLERS]
@@ -239,12 +192,9 @@ class HttpRequest:
             raise AttributeError("You cannot set the upload handlers after the upload has been processed.")
         self._upload_handlers = upload_handlers
 
+    #BEAST 2: THIS IS A BEAST NEED TO VISIT THIS TONIGHT
     def parse_file_upload(self, META, post_data):
         """Return a tuple of (POST QueryDict, FILES MultiValueDict)."""
-        self.upload_handlers = ImmutableList(
-            self.upload_handlers,
-            warning="You cannot alter upload handlers after the upload has been processed."
-        )
         parser = MultiPartParser(META, post_data, self.upload_handlers, self.encoding)
         return parser.parse()
 
@@ -260,6 +210,8 @@ class HttpRequest:
                 raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
 
             try:
+                #At this point, remember that, self.read() expects self._stream to be set to an appropriate
+                # source of bytes by a corresponding request subclass (e.g. WSGIRequest).
                 self._body = self.read()
             except IOError as e:
                 raise UnreadablePostError(*e.args) from e
@@ -270,6 +222,7 @@ class HttpRequest:
         self._post = QueryDict()
         self._files = MultiValueDict()
 
+    #BEAST 1: THIS IS A BEAST NEED TO VISIT THIS FIRST TONIGHT - DONE
     def _load_post_and_files(self):
         """Populate self._post and self._files if the content-type is a form type"""
         if self.method != 'POST':
@@ -286,6 +239,7 @@ class HttpRequest:
             else:
                 data = self
             try:
+                #returns POST QueryDict and MultiValueDIct for _files
                 self._post, self._files = self.parse_file_upload(self.META, data)
             except MultiPartParserError:
                 # An error occurred while parsing POST data. Since when
@@ -296,6 +250,7 @@ class HttpRequest:
                 raise
         elif self.content_type == 'application/x-www-form-urlencoded':
             self._post, self._files = QueryDict(self.body, encoding=self._encoding), MultiValueDict()
+        #for any other CONTENT_TYPE, an empty QueryDict for _post and empty MultiValueDict for _files
         else:
             self._post, self._files = QueryDict(encoding=self._encoding), MultiValueDict()
 
@@ -539,21 +494,3 @@ def split_domain_port(host):
     # Remove a trailing dot (if present) from the domain.
     domain = domain[:-1] if domain.endswith('.') else domain
     return domain, port
-
-
-def validate_host(host, allowed_hosts):
-    """
-    Validate the given host for this site.
-
-    Check that the host looks valid and matches a host or host pattern in the
-    given list of ``allowed_hosts``. Any pattern beginning with a period
-    matches a domain and all its subdomains (e.g. ``.example.com`` matches
-    ``example.com`` and any subdomain), ``*`` matches anything, and anything
-    else must match exactly.
-
-    Note: This function assumes that the given host is lowercased and has
-    already had the port, if any, stripped off.
-
-    Return ``True`` for a valid host, ``False`` otherwise.
-    """
-    return any(pattern == '*' or is_same_domain(host, pattern) for pattern in allowed_hosts)
