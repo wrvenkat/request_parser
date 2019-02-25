@@ -125,6 +125,10 @@ class MultiPartParser:
             )
             # Check to see if it was handled
             if result is not None:
+                #If we're returning as soon as the result is not None, then
+                #it means there can be only one handler that is allowed to parse
+                #body and files - technically there can be more than one but the
+                #first one is picked
                 return result[0], result[1]
 
         # Create the data structures to be used later.
@@ -144,6 +148,8 @@ class MultiPartParser:
         num_post_keys = 0
         # To limit the amount of data read from the request.
         read_size = None
+
+        #The BEAST of parsing is below!
 
         try:
             for item_type, meta_data, field_stream in Parser(stream, self._boundary):
@@ -288,10 +294,14 @@ class MultiPartParser:
         for i, handler in enumerate(self._upload_handlers):
             file_obj = handler.file_complete(counters[i])
             if file_obj:
+                #There doesn't seem to be any signal handling going on here?
+                #TODO: Revisit this after going through parse().
+
                 # If it returns a file object, then set the files dict.
                 self._files.appendlist(force_text(old_field_name, self._encoding, errors='replace'), file_obj)
                 break
 
+    #What the hell is this for?
     def IE_sanitize(self, filename):
         """Cleanup filename from Internet Explorer full paths."""
         return filename and filename[filename.rfind("\\") + 1:].strip()
