@@ -135,7 +135,7 @@ class MultiPartParser:
         self._post = QueryDict(mutable=True)
         self._files = MultiValueDict()
 
-        # Instantiate the parser and stream:
+        # Instantiate the stream:
         stream = LazyStream(ChunkIter(self._input_data, self._chunk_size))
 
         # Whether or not to signal a file-completion at the beginning of the loop.
@@ -464,6 +464,7 @@ class InterBoundaryIter:
 
     def __next__(self):
         try:
+            #create a new-stream from the bytes-set returned by BoundaryIter
             return LazyStream(BoundaryIter(self._stream, self._boundary))
         except InputStreamExhausted:
             raise StopIteration()
@@ -491,8 +492,10 @@ class BoundaryIter:
         # Try to use mx fast string search if available. Otherwise
         # use Python find. Wrap the latter for consistency.
         unused_char = self._stream.read(1)
+        #peek if stream is empty
         if not unused_char:
             raise InputStreamExhausted()
+        #if not empty, put the read character back in the stream
         self._stream.unget(unused_char)
 
     def __iter__(self):
@@ -510,6 +513,7 @@ class BoundaryIter:
         for bytes in stream:
             bytes_read += len(bytes)
             chunks.append(bytes)
+
             if bytes_read > rollback:
                 break
             if not bytes:
@@ -520,21 +524,31 @@ class BoundaryIter:
         if not chunks:
             raise StopIteration()
 
+        #convert the byte array into one contiguous set of bytes (or string)
         chunk = b''.join(chunks)
         boundary = self._find_boundary(chunk)
 
         if boundary:
+            #get the indices of current inter-boundary data - end
+            #get the beginning of the next inter-boundary data - next
             end, next = boundary
+            #put back everything starting from next till end of POST back in the stream
             stream.unget(chunk[next:])
+            #done with current inter-boundary data
             self._done = True
+            #return everything from beginning to end
             return chunk[:end]
+        #If no boundary is found
         else:
             # make sure we don't treat a partial boundary (and
             # its separators) as data
+
+            #if there's no data from beginning to end - 6
             if not chunk[:-rollback]:  # and len(chunk) >= (len(self._boundary) + 6):
                 # There's nothing left, we should just return and mark as done.
                 self._done = True
                 return chunk
+            #if there is data, then put it back and return
             else:
                 stream.unget(chunk[-rollback:])
                 return chunk[:-rollback]
@@ -638,6 +652,9 @@ class Parser:
 
     def __iter__(self):
         boundarystream = InterBoundaryIter(self._stream, self._separator)
+        #for each sub-stream within boundaries, yield the parsed content
+        #note that many sub-streams (usually) form a boundaryStream
+        #And a boundaryStream is the stream of bytes between boundaries
         for sub_stream in boundarystream:
             # Iterate over each part
             yield parse_boundary_stream(sub_stream, 1024)
