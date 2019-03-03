@@ -3,20 +3,24 @@ import re
 import warnings
 from io import BytesIO
 from itertools import chain
-from urllib.parse import quote, urlencode, urljoin, urlsplit
+#from urllib.parse import quote, urlencode, urljoin, urlsplit
+from urllib import quote, urlencode
+    #urljoin, urlsplit
 
-from django.conf import settings
+from request_parser.conf.settings import Settings as settings
 from django.core import signing
 from django.core.exceptions import (
     DisallowedHost, ImproperlyConfigured, RequestDataTooBig,
 )
 from django.core.files import uploadhandler
-from django.http.multipartparser import MultiPartParser, MultiPartParserError
-from django.utils.datastructures import ImmutableList, MultiValueDict
+from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError
+from request_parser.utils.datastructures import ImmutableList, MultiValueDict
 from django.utils.deprecation import RemovedInDjango30Warning
 from django.utils.encoding import escape_uri_path, iri_to_uri
 from django.utils.functional import cached_property
-from utils.http import is_same_domain, limited_parse_qsl
+from request_parser.utils.http import is_same_domain, limited_parse_qsl
+
+from six import reraise as raise_
 
 RAISE_ERROR = object()
 host_validation_re = re.compile(r"^([a-z0-9.-]+|\[[a-f0-9]*:[a-f0-9\.:]+\])(:\d+)?$")
@@ -215,7 +219,8 @@ class HttpRequest:
                 #source of bytes by a corresponding request subclass (e.g. WSGIRequest).
                 self._body = self.read()
             except IOError as e:
-                raise UnreadablePostError(*e.args) from e
+                raise_(UnreadablePostError(*e.args), e)
+                #raise UnreadablePostError(*e.args) from e
             self._stream = BytesIO(self._body)
         return self._body
 
@@ -275,14 +280,15 @@ class HttpRequest:
         try:
             return self._stream.read(*args, **kwargs)
         except IOError as e:
-            raise UnreadablePostError(*e.args) from e
+            raise_(UnreadablePostError(*e.args), e)
 
     def readline(self, *args, **kwargs):
         self._read_started = True
         try:
             return self._stream.readline(*args, **kwargs)
         except IOError as e:
-            raise UnreadablePostError(*e.args) from e
+            #raise UnreadablePostError(*e.args) from e
+            raise_(UnreadablePostError(*e.args), e)
 
     def __iter__(self):
         return iter(self.readline, b'')
@@ -292,7 +298,9 @@ class HttpRequest:
             'HttpRequest.xreadlines() is deprecated in favor of iterating the '
             'request.', RemovedInDjango30Warning, stacklevel=2,
         )
-        yield from self
+        for xreadline_ in self:
+            yield xreadline_
+        #yield from self
 
     #Why is this being returned here? I don't understand - Candudate for removal.
     #def readlines(self):

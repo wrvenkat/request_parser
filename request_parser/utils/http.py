@@ -5,17 +5,22 @@ import re
 import unicodedata
 from binascii import Error as BinasciiError
 from email.utils import formatdate
-from urllib.parse import (
+#from urllib.parse import (
+#    ParseResult, SplitResult, _coerce_args, _splitnetloc, _splitparams, quote,
+#    quote_plus, scheme_chars, unquote, unquote_plus,
+#    urlencode as original_urlencode, uses_params,
+#)
+from urllib import (
     ParseResult, SplitResult, _coerce_args, _splitnetloc, _splitparams, quote,
     quote_plus, scheme_chars, unquote, unquote_plus,
     urlencode as original_urlencode, uses_params,
 )
 
-from django.core.exceptions import TooManyFieldsSent
-from django.utils.datastructures import MultiValueDict
-from django.utils.functional import keep_lazy_text
+from request_parser.exceptions.exceptions import TooManyFieldsSent
+from request_parser.utils.datastructures import MultiValueDict
+#from django.utils.functional import keep_lazy_text
 
-#from urllib.parse import unquote
+from six import reraise as raise_
 
 # based on RFC 7232, Appendix C
 ETAG_MATCH = re.compile(r'''
@@ -44,7 +49,7 @@ RFC3986_SUBDELIMS = "!$&'()*+,;="
 FIELDS_MATCH = re.compile('[&;]')
 
 
-@keep_lazy_text
+#@keep_lazy_text
 def urlquote(url, safe='/'):
     """
     A legacy compatibility wrapper to Python's urllib.parse.quote() function.
@@ -53,7 +58,7 @@ def urlquote(url, safe='/'):
     return quote(url, safe)
 
 
-@keep_lazy_text
+#@keep_lazy_text
 def urlquote_plus(url, safe=''):
     """
     A legacy compatibility wrapper to Python's urllib.parse.quote_plus()
@@ -62,7 +67,7 @@ def urlquote_plus(url, safe=''):
     return quote_plus(url, safe)
 
 
-@keep_lazy_text
+#@keep_lazy_text
 def urlunquote(quoted_url):
     """
     A legacy compatibility wrapper to Python's urllib.parse.unquote() function.
@@ -71,7 +76,7 @@ def urlunquote(quoted_url):
     return unquote(quoted_url)
 
 
-@keep_lazy_text
+#@keep_lazy_text
 def urlunquote_plus(quoted_url):
     """
     A legacy compatibility wrapper to Python's urllib.parse.unquote_plus()
@@ -167,7 +172,8 @@ def parse_http_date(date):
         result = datetime.datetime(year, month, day, hour, min, sec)
         return calendar.timegm(result.utctimetuple())
     except Exception as exc:
-        raise ValueError("%r is not a valid date" % date) from exc
+        #raise ValueError("%r is not a valid date" % date) from exc
+        raise_(ValueError("%r is not a valid date" % date), exc)
 
 def parse_http_date_safe(date):
     """
@@ -420,9 +426,12 @@ def limited_parse_qsl(qs, keep_blank_values=False, encoding='utf-8',
                 continue
         if nv[1] or keep_blank_values:
             name = nv[0].replace('+', ' ')
-            name = unquote(name, encoding=encoding, errors=errors)
+            #TODO: need to convert 'name' with 'encoding' to UTF-8 before asking urllib.unquote to unquote?
+            #name = unquote(name, encoding=encoding, errors=errors)
+            name = unquote(name)
             value = nv[1].replace('+', ' ')
-            value = unquote(value, encoding=encoding, errors=errors)
+            #value = unquote(value, encoding=encoding, errors=errors)
+            value = unquote(value)
             r.append((name, value))
     return r
 

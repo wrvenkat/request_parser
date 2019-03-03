@@ -8,11 +8,12 @@ import base64
 import binascii
 import cgi
 
-from compat.six import raise_from
+from six import reraise as raise_from
+#from compat.six import raise_from
 #import six.moves.urllib as urllib
 from urllib import unquote
 
-from request_parser.conf.settings import Settings
+from request_parser.conf.settings import Settings as settings
 #from django.burp.conf.settings import settings
 from django.core.exceptions import (
     RequestDataTooBig, SuspiciousMultipartForm, TooManyFieldsSent,
@@ -104,7 +105,7 @@ class MultiPartParser:
 
         Return a tuple containing the POST and FILES dictionary, respectively.
         """
-        from django.http import QueryDict
+        from request_parser.http.request import QueryDict
 
         encoding = self._encoding
         handlers = self._upload_handlers
