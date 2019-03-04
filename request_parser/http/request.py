@@ -8,8 +8,8 @@ from urllib import quote, urlencode
     #urljoin, urlsplit
 
 from request_parser.conf.settings import Settings as settings
-from django.core import signing
-from django.core.exceptions import (
+#from django.core import signing
+from request_parser.exceptions.exceptions import (
     DisallowedHost, ImproperlyConfigured, RequestDataTooBig,
 )
 from django.core.files import uploadhandler
@@ -17,7 +17,7 @@ from request_parser.http.multipartparser import MultiPartParser, MultiPartParser
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict
 from django.utils.deprecation import RemovedInDjango30Warning
 from django.utils.encoding import escape_uri_path, iri_to_uri
-from django.utils.functional import cached_property
+#from django.utils.functional import cached_property
 from request_parser.utils.http import is_same_domain, limited_parse_qsl
 
 from six import reraise as raise_
@@ -140,7 +140,7 @@ class HttpRequest:
             path=self.get_full_path(),
         )
 
-    @cached_property
+    #@cached_property
     def _current_scheme_host(self):
         return '{}://{}'.format(self.scheme, self.get_host())
 

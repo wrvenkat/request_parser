@@ -15,7 +15,7 @@ from urllib import unquote
 
 from request_parser.conf.settings import Settings as settings
 #from django.burp.conf.settings import settings
-from django.core.exceptions import (
+from request_parser.exceptions.exceptions import (
     RequestDataTooBig, SuspiciousMultipartForm, TooManyFieldsSent,
 )
 from django.core.files.uploadhandler import (
@@ -369,7 +369,8 @@ class LazyStream:
         out = b''.join(parts())
         return out
 
-    def __next__(self):
+    #def __next__(self):
+    def next(self):
         """
         Used when the exact number of bytes to read is unimportant.
 
@@ -440,7 +441,8 @@ class ChunkIter:
         self.flo = flo
         self.chunk_size = chunk_size
 
-    def __next__(self):
+    #def __next__(self):
+    def next(self):
         try:
             data = self.flo.read(self.chunk_size)
         except InputStreamExhausted:
@@ -461,7 +463,8 @@ class InterBoundaryIter:
         self._stream = stream
         self._boundary = boundary
 
-    def __iter__(self):
+    #def __iter__(self):
+    def next(self):
         return self
 
     def __next__(self):
@@ -503,7 +506,8 @@ class BoundaryIter:
     def __iter__(self):
         return self
 
-    def __next__(self):
+    #def __next__(self):
+    def next(self):
         if self._done:
             raise StopIteration()
 
@@ -685,7 +689,8 @@ def parse_header(line):
             value = p[i + 1:].strip()
             if has_encoding:
                 encoding, lang, value = value.split(b"'")
-                value = urllib.unquote(value.decode(), encoding=encoding.decode())
+                #value = unquote(value.decode(), encoding=encoding.decode())
+                value = unquote(value.decode())
             if len(value) >= 2 and value[:1] == value[-1:] == b'"':
                 value = value[1:-1]
                 value = value.replace(b'\\\\', b'\\').replace(b'\\"', b'"')
