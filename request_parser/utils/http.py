@@ -11,15 +11,22 @@ from email.utils import formatdate
 #    urlencode as original_urlencode, uses_params,
 #)
 from urllib import (
-    ParseResult, SplitResult, _coerce_args, _splitnetloc, _splitparams, quote,
-    quote_plus, scheme_chars, unquote, unquote_plus,
-    urlencode as original_urlencode, uses_params,
+    quote, quote_plus, unquote, unquote_plus,
+    urlencode as original_urlencode
+)
+from urlparse import (
+    ParseResult, SplitResult, scheme_chars
+)
+from six.moves.urllib import uses_params
+from six.moves.urllib import (
+    _coerce_args, _splitnetloc, _splitparams
 )
 
 from request_parser.exceptions.exceptions import TooManyFieldsSent
 from request_parser.utils.datastructures import MultiValueDict
 #from django.utils.functional import keep_lazy_text
 
+#Python 2 replacement for raise_from
 from six import reraise as raise_
 
 # based on RFC 7232, Appendix C
@@ -175,6 +182,7 @@ def parse_http_date(date):
         #raise ValueError("%r is not a valid date" % date) from exc
         raise_(ValueError("%r is not a valid date" % date), exc)
 
+
 def parse_http_date_safe(date):
     """
     Same as parse_http_date, but return None if the input is invalid.
@@ -184,9 +192,7 @@ def parse_http_date_safe(date):
     except Exception:
         pass
 
-
 # Base 36 functions: useful for generating compact URLs
-
 def base36_to_int(s):
     """
     Convert a base 36 string to an int. Raise ValueError if the input won't fit
@@ -319,7 +325,6 @@ def _urlparse(url, scheme='', allow_fragments=True):
     result = ParseResult(scheme, netloc, url, params, query, fragment)
     return _coerce_result(result)
 
-
 # Copied from urllib.parse.urlsplit() with
 # https://github.com/python/cpython/pull/661 applied.
 def _urlsplit(url, scheme='', allow_fragments=True):
@@ -434,6 +439,7 @@ def limited_parse_qsl(qs, keep_blank_values=False, encoding='utf-8',
             value = unquote(value)
             r.append((name, value))
     return r
+
 
 def escape_leading_slashes(url):
     """
