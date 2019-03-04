@@ -2,9 +2,9 @@ import copy
 import os
 from importlib import import_module
 #from importlib.util import find_spec as importlib_find
+from imp import find_module as importlib_find
 
 from six import reraise as raise_
-
 
 def import_string(dotted_path):
     """
@@ -28,7 +28,7 @@ def import_string(dotted_path):
         raise_('Module "%s" does not define a "%s" attribute/class' % (module_path, class_name), err)
 
 
-def autodiscover_modules(*args, **kwargs):
+#def autodiscover_modules(*args, **kwargs):
     """
     Auto-discover INSTALLED_APPS modules and fail silently when
     not present. This forces an import on them to register any admin bits they
@@ -37,6 +37,7 @@ def autodiscover_modules(*args, **kwargs):
     You may provide a register_to keyword parameter as a way to access a
     registry. This register_to object must have a _registry instance variable
     to access it.
+    """
     """
     from django.apps import apps
 
@@ -62,7 +63,7 @@ def autodiscover_modules(*args, **kwargs):
                 # attempting to import it, otherwise we want it to bubble up.
                 if module_has_submodule(app_config.module, module_to_search):
                     raise
-
+"""
 
 def module_has_submodule(package, module_name):
     """See if 'module' is in 'package'."""

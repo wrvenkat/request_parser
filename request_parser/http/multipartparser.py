@@ -18,7 +18,7 @@ import request_parser.conf.settings as settings
 from request_parser.exceptions.exceptions import (
     RequestDataTooBig, SuspiciousMultipartForm, TooManyFieldsSent,
 )
-from django.core.files.uploadhandler import (
+from request_parser.files.uploadhandler import (
     SkipFile, StopFutureHandlers, StopUpload,
 )
 from request_parser.utils.datastructures import MultiValueDict

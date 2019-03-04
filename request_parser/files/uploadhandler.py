@@ -8,7 +8,7 @@ from request_parser.conf import settings
 from request_parser.files.uploadedfile import (
     InMemoryUploadedFile, TemporaryUploadedFile,
 )
-from django.utils.module_loading import import_string
+from request_parser.utils.module_loading import import_string
 
 __all__ = [
     'UploadFileException', 'StopUpload', 'SkipFile', 'FileUploadHandler',
