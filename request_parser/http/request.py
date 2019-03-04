@@ -7,12 +7,12 @@ from itertools import chain
 from urllib import quote, urlencode
     #urljoin, urlsplit
 
-from request_parser.conf.settings import Settings as settings
+import request_parser.conf.settings as settings
 #from django.core import signing
 from request_parser.exceptions.exceptions import (
     DisallowedHost, ImproperlyConfigured, RequestDataTooBig,
 )
-from django.core.files import uploadhandler
+from request_parser.files import uploadhandler
 from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict
 from django.utils.deprecation import RemovedInDjango30Warning
@@ -136,7 +136,7 @@ class HttpRequest:
         """
         return '{scheme}://{host}{path}'.format(
             scheme=self.scheme,
-            host=self._get_raw_host(),
+            host=self.get_host(),
             path=self.get_full_path(),
         )
 

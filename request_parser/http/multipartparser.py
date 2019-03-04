@@ -13,7 +13,7 @@ from six import reraise as raise_from
 #import six.moves.urllib as urllib
 from urllib import unquote
 
-from request_parser.conf.settings import Settings as settings
+import request_parser.conf.settings as settings
 #from django.burp.conf.settings import settings
 from request_parser.exceptions.exceptions import (
     RequestDataTooBig, SuspiciousMultipartForm, TooManyFieldsSent,

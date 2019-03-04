@@ -9,8 +9,7 @@ from request_parser.conf import settings
 from request_parser.files import temp as tempfile
 from request_parser.files.base import File
 
-__all__ = ('UploadedFile', 'TemporaryUploadedFile', 'InMemoryUploadedFile',
-           'SimpleUploadedFile')
+__all__ = ('UploadedFile', 'TemporaryUploadedFile', 'InMemoryUploadedFile', 'SimpleUploadedFile')
 
 
 class UploadedFile(File):
@@ -68,10 +67,10 @@ class TemporaryUploadedFile(UploadedFile):
     def close(self):
         try:
             return self.file.close()
-        except FileNotFoundError:
+        except IOError:
             # The file was moved or deleted before the tempfile could unlink
             # it. Still sets self.file.close_called and calls
-            # self.file.file.close() before the exception.
+            # self.file.file.close() before the exception.     
             pass
 
 
