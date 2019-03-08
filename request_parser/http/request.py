@@ -15,7 +15,6 @@ from request_parser.exceptions.exceptions import (
 from request_parser.files import uploadhandler
 from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict
-from django.utils.deprecation import RemovedInDjango30Warning
 from request_parser.utils.encoding import escape_uri_path, iri_to_uri
 #from django.utils.functional import cached_property
 from request_parser.utils.http import is_same_domain, limited_parse_qsl
@@ -294,10 +293,10 @@ class HttpRequest:
         return iter(self.readline, b'')
 
     def xreadlines(self):
-        warnings.warn(
-            'HttpRequest.xreadlines() is deprecated in favor of iterating the '
-            'request.', RemovedInDjango30Warning, stacklevel=2,
-        )
+        #warnings.warn(
+        #    'HttpRequest.xreadlines() is deprecated in favor of iterating the '
+        #    'request.', RemovedInDjango30Warning, stacklevel=2,
+        #)
         for xreadline_ in self:
             yield xreadline_
         #yield from self
