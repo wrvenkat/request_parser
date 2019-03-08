@@ -16,7 +16,7 @@ from request_parser.files import uploadhandler
 from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict
 from django.utils.deprecation import RemovedInDjango30Warning
-from django.utils.encoding import escape_uri_path, iri_to_uri
+from request_parser.utils.encoding import escape_uri_path, iri_to_uri
 #from django.utils.functional import cached_property
 from request_parser.utils.http import is_same_domain, limited_parse_qsl
 

@@ -22,7 +22,7 @@ from request_parser.files.uploadhandler import (
     SkipFile, StopFutureHandlers, StopUpload,
 )
 from request_parser.utils.datastructures import MultiValueDict
-from django.utils.encoding import force_text
+from request_parser.utils.encoding import force_text
 from django.utils.text import unescape_entities
 
 __all__ = ('MultiPartParser', 'MultiPartParserError', 'InputStreamExhausted')
