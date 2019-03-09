@@ -463,11 +463,11 @@ class InterBoundaryIter:
         self._stream = stream
         self._boundary = boundary
 
-    #def __iter__(self):
-    def next(self):
+    def __iter__(self):
         return self
 
-    def __next__(self):
+    #def __next__(self): <- Python 3
+    def next(self): #<- Python 2.x
         try:
             #create a new-stream from the bytes-set returned by BoundaryIter
             return LazyStream(BoundaryIter(self._stream, self._boundary))
