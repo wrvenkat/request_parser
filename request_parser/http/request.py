@@ -305,7 +305,7 @@ class HttpRequest:
     #def readlines(self):
     #    return list(self)
 
-class QueryDict(MultiMultiPartValueDict):
+class QueryDict(MultiValueDict):
     """
     A specialized MultiValueDict which represents a query string.
 
