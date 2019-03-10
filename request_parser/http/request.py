@@ -326,7 +326,7 @@ class QueryDict(MultiValueDict):
     _encoding = None
 
     def __init__(self, query_string=None, mutable=False, encoding=None):
-        super().__init__()
+        super(QueryDict, self).__init__()
         self.encoding = encoding or settings.DEFAULT_CHARSET
         query_string = query_string or ''
         parse_qsl_kwargs = {
@@ -381,11 +381,11 @@ class QueryDict(MultiValueDict):
         self._assert_mutable()
         key = bytes_to_text(key, self.encoding)
         value = bytes_to_text(value, self.encoding)
-        super().__setitem__(key, value)
+        super(QueryDict, self).__setitem__(key, value)
 
     def __delitem__(self, key):
         self._assert_mutable()
-        super().__delitem__(key)
+        super(QueryDict, self).__delitem__(key)
 
     def __copy__(self):
         result = self.__class__('', mutable=True, encoding=self.encoding)
@@ -404,35 +404,35 @@ class QueryDict(MultiValueDict):
         self._assert_mutable()
         key = bytes_to_text(key, self.encoding)
         list_ = [bytes_to_text(elt, self.encoding) for elt in list_]
-        super().setlist(key, list_)
+        super(QueryDict, self).setlist(key, list_)
 
     def setlistdefault(self, key, default_list=None):
         self._assert_mutable()
-        return super().setlistdefault(key, default_list)
+        return super(QueryDict, self).setlistdefault(key, default_list)
 
     def appendlist(self, key, value):
         self._assert_mutable()
         key = bytes_to_text(key, self.encoding)
         value = bytes_to_text(value, self.encoding)
-        super().appendlist(key, value)
+        super(QueryDict, self).appendlist(key, value)
 
     def pop(self, key, *args):
         self._assert_mutable()
-        return super().pop(key, *args)
+        return super(QueryDict, self).pop(key, *args)
 
     def popitem(self):
         self._assert_mutable()
-        return super().popitem()
+        return super(QueryDict, self).popitem()
 
     def clear(self):
         self._assert_mutable()
-        super().clear()
+        super(QueryDict, self).clear()
 
     def setdefault(self, key, default=None):
         self._assert_mutable()
         key = bytes_to_text(key, self.encoding)
         default = bytes_to_text(default, self.encoding)
-        return super().setdefault(key, default)
+        return super(QueryDict, self).setdefault(key, default)
 
     def copy(self):
         """Return a mutable copy of this object."""
