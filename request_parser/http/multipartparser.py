@@ -690,6 +690,8 @@ def parse_header(line):
             if has_encoding:
                 encoding, lang, value = value.split(b"'")
                 #value = unquote(value.decode(), encoding=encoding.decode())
+                #WARNING: Usage of unquote without an explicit encoding argument
+                #will come back to bite us. Investigate.
                 value = unquote(value.decode())
             if len(value) >= 2 and value[:1] == value[-1:] == b'"':
                 value = value[1:-1]
