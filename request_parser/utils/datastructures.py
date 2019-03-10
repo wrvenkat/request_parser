@@ -242,7 +242,9 @@ class ImmutableList(tuple):
         AttributeError: You cannot mutate this.
     """
 
-    def __new__(cls, *args, warning='ImmutableList object is immutable.', **kwargs):
+    #See https://stackoverflow.com/questions/5940180/python-default-keyword-arguments-after-variable-length-positional-arguments
+    def __new__(cls, *args, **kwargs):
+        warning = kwargs.pop('warning', 'ImmutableList object is immutable.')
         self = tuple.__new__(cls, *args, **kwargs)
         self.warning = warning
         return self
