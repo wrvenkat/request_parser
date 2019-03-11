@@ -10,7 +10,7 @@ from urllib import quote, urlencode
 import request_parser.conf.settings as settings
 #from django.core import signing
 from request_parser.exceptions.exceptions import (
-    DisallowedHost, ImproperlyConfigured, RequestDataTooBig,
+    ImproperlyConfigured, RequestDataTooBig,
 )
 from request_parser.files import uploadhandler
 from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError
