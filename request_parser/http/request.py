@@ -45,6 +45,9 @@ class NoHostFoundException(Exception):
 class HttpRequest:
     """A basic HTTP request."""
 
+    #FEATURE: Implement request header parsing - as far as now, the request header
+    #parsing is handled by a sub-class e.g. WSGIRequest.
+
     # The encoding used in GET/POST dicts. None means use default setting.
     _encoding = None
     _upload_handlers = []
@@ -217,6 +220,7 @@ class HttpRequest:
 
             # Limit the maximum request data size that will be handled in-memory.
             #TODO: Figure out a way to do BufferedReading when in-memory body parsing is not possible
+            #QUESTION: How/where is this used - is the self.read() used based on this?
             if (settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None and
                     int(self.META.get('CONTENT_LENGTH') or 0) > settings.DATA_UPLOAD_MAX_MEMORY_SIZE):
                 raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
@@ -228,6 +232,9 @@ class HttpRequest:
             except IOError as e:
                 raise_(UnreadablePostError(*e.args), e)
                 #raise UnreadablePostError(*e.args) from e
+            
+            #set/change the _stream to _body so that
+            #when self.read() is called, it points to _body as a stream
             self._stream = BytesIO(self._body)
         return self._body
 
@@ -235,12 +242,21 @@ class HttpRequest:
         self._post = QueryDict()
         self._files = MultiValueDict()
 
-    #BEAST 1: THIS IS A BEAST NEED TO VISIT THIS FIRST TONIGHT - DONE
     def _load_post_and_files(self):
         """Populate self._post and self._files if the content-type is a form type"""
         if self.method != 'POST':
+            #if the request is not POST, then we just set the _post and _files to empty
+            #QueryDict and MultiValueDict respectively
+            #Note that this means that a GET with a body is not parsed
+            #TODO: Decide if we need to handle this
             self._post, self._files = QueryDict(encoding=self._encoding), MultiValueDict()
             return
+        
+        #TODO: Parse the body if the request method is not a POST and GET
+        #if self.method != 'GET' and self.method == 'PUT'
+
+        #if the read has started and we still don't have a _body attribute, then
+        #it means smoething has gone wrong in the parsing of POST body
         if self._read_started and not hasattr(self, '_body'):
             self._mark_post_parse_error()
             return
@@ -248,13 +264,13 @@ class HttpRequest:
         if self.content_type == 'multipart/form-data':
             if hasattr(self, '_body'):
                 # Use already read data
-                #remember that we're not providing self._stream although at this point
-                #even though, self._stream would point to BytesIO(self._body)
+                #create a new stream out of _body
                 data = BytesIO(self._body)
             else:
                 data = self
+            
             try:
-                #returns POST QueryDict and MultiValueDIct for _files
+                #returns POST QueryDict and MultiValueDict for _files
                 self._post, self._files = self.parse_file_upload(self.META, data)
             except MultiPartParserError:
                 # An error occurred while parsing POST data. Since when
@@ -264,6 +280,8 @@ class HttpRequest:
                 self._mark_post_parse_error()
                 raise
         elif self.content_type == 'application/x-www-form-urlencoded':
+            #if the content-type is of form-urlencoded, then all we need to do is to parse the body
+            #as a key-value pair. This gives our _post and an empty _files of MultiValueDict
             self._post, self._files = QueryDict(self.body, encoding=self._encoding), MultiValueDict()
         #for any other CONTENT_TYPE, an empty QueryDict for _post and empty MultiValueDict for _files
         else:
@@ -309,9 +327,10 @@ class HttpRequest:
             yield xreadline_
         #yield from self
 
-    #Why is this being returned here? I don't understand - Candudate for removal.
-    #def readlines(self):
-    #    return list(self)
+    #QUESTION: Why is this being returned here?
+    #I don't understand - Candidate for removal.
+    def readlines(self):
+        return list(self)
 
 class QueryDict(MultiValueDict):
     """
@@ -343,9 +362,9 @@ class QueryDict(MultiValueDict):
             'encoding': self.encoding,
         }
         
-        #TODO 1: Decide whether the constructor should accept the query-string to be parsed.
-        #TODO 2: Convert query_string to bytes
-        #TODO 3: Need to call urlparse on the query_string before it's being passed on to limited_parse_qsl?
+        #TODO: Decide whether the constructor should accept the query-string to be parsed.
+        #TODO: Convert query_string to bytes
+        #TODO: Need to call urlparse on the query_string before it's being passed on to limited_parse_qsl?
 
         if isinstance(query_string, bytes):
             # query_string normally contains URL-encoded data, a subset of ASCII.
@@ -475,7 +494,6 @@ class QueryDict(MultiValueDict):
             )
         return '&'.join(output)
 
-
 # It's neither necessary nor appropriate to use
 # django.utils.encoding.force_text for parsing URLs and form inputs. Thus,
 # this slightly more restricted function, used by QueryDict.
@@ -491,7 +509,6 @@ def bytes_to_text(s, encoding):
         return str(s, encoding, 'replace')
     else:
         return s
-
 
 def split_domain_port(host):
     """
