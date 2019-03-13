@@ -179,7 +179,7 @@ class HttpRequest:
         dictionary has already been created, remove and recreate it on the
         next access (so that it is decoded correctly).
         """
-        #TODO: Need to check when the GET/POST dictonary is redone
+        #QUESTION: Need to check when the GET/POST dictonary is redone
         self._encoding = val
         if hasattr(self, 'GET'):
             del self.GET
@@ -248,7 +248,6 @@ class HttpRequest:
             #if the request is not POST, then we just set the _post and _files to empty
             #QueryDict and MultiValueDict respectively
             #Note that this means that a GET with a body is not parsed
-            #TODO: Decide if we need to handle this
             self._post, self._files = QueryDict(encoding=self._encoding), MultiValueDict()
             return
         
@@ -362,9 +361,8 @@ class QueryDict(MultiValueDict):
             'encoding': self.encoding,
         }
         
-        #TODO: Decide whether the constructor should accept the query-string to be parsed.
         #TODO: Convert query_string to bytes
-        #TODO: Need to call urlparse on the query_string before it's being passed on to limited_parse_qsl?
+        #QUESTION: Need to call urlparse on the query_string before it's being passed on to limited_parse_qsl?
 
         if isinstance(query_string, bytes):
             # query_string normally contains URL-encoded data, a subset of ASCII.
