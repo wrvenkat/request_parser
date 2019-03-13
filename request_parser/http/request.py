@@ -22,6 +22,7 @@ from request_parser.utils.http import is_same_domain, limited_parse_qsl
 from six import reraise as raise_
 
 RAISE_ERROR = object()
+#validates a given string for a format of the form host:port
 host_validation_re = re.compile(r"^([a-z0-9.-]+|\[[a-f0-9]*:[a-f0-9\.:]+\])(:\d+)?$")
 
 
@@ -46,9 +47,6 @@ class HttpRequest:
 
     # The encoding used in GET/POST dicts. None means use default setting.
     _encoding = None
-    #We might need the below so that for "multipar/form-data" file uploads,
-    #we use the TemporaryFileUpload handler class to save the uploaded file
-    #to be handled under our context
     _upload_handlers = []
 
     def __init__(self):
@@ -65,7 +63,6 @@ class HttpRequest:
         self.path = ''
         self.path_info = ''
         self.method = None
-        self.resolver_match = None
         self.content_type = None
         self.content_params = None
 
@@ -106,6 +103,9 @@ class HttpRequest:
         return self._get_full_path(self.path_info, force_append_slash)
 
     def _get_full_path(self, path, force_append_slash):
+        """
+        Returns the path of a request.
+        """
         # RFC 3986 requires query string arguments to be in the ASCII range.
         # Rather than crash if this doesn't happen, we encode defensively.
         return '%s%s%s' % (
@@ -128,6 +128,13 @@ class HttpRequest:
                 return default
         return cookie_value
 
+    def get_cookies(self, default=None):
+        """
+        Return a copy of the COOKIES dictionary.
+        """
+        cookies = dict(self.COOKIES) if self.COOKIES else default
+        return cookies
+
     def get_raw_uri(self):
         """
         Return an absolute URI from variables available in this request. Skip
@@ -139,7 +146,6 @@ class HttpRequest:
             path=self.get_full_path(),
         )
 
-    #@cached_property
     def _current_scheme_host(self):
         return '{}://{}'.format(self.scheme, self.get_host())
 
@@ -177,8 +183,11 @@ class HttpRequest:
         if hasattr(self, '_post'):
             del self._post
 
-    #ALL ABOUT FILE UPLOADS!
     def _initialize_handlers(self):
+        """
+        Set the _upload_handlers to an array of upload handlers loaded from
+        settings.FILE_UPLOAD_HANDLERS
+        """
         self._upload_handlers = [uploadhandler.load_handler(handler, self)
                                  for handler in settings.FILE_UPLOAD_HANDLERS]
 
@@ -195,7 +204,6 @@ class HttpRequest:
             raise AttributeError("You cannot set the upload handlers after the upload has been processed.")
         self._upload_handlers = upload_handlers
 
-    #BEAST 2: THIS IS A BEAST NEED TO VISIT THIS TONIGHT
     def parse_file_upload(self, META, post_data):
         """Return a tuple of (POST QueryDict, FILES MultiValueDict)."""
         parser = MultiPartParser(META, post_data, self.upload_handlers, self.encoding)
