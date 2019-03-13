@@ -361,7 +361,7 @@ class QueryDict(MultiValueDict):
             'encoding': self.encoding,
         }
         
-        #TODO: Convert query_string to bytes
+        #TODO: Convert query_string to bytes - why did I put this?
         #QUESTION: Need to call urlparse on the query_string before it's being passed on to limited_parse_qsl?
 
         if isinstance(query_string, bytes):
