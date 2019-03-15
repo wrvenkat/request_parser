@@ -704,6 +704,14 @@ def _parse_header_params(s):
     while s[:1] == b';':
         s = s[1:]
         end = s.find(b';')
+        #if there's a " bounded by the recently found ; then we
+        #look for the next ; starting at the index where the ; was
+        #found + 1 (end + 1)
+        #we do this until we either reach the end of the string or
+        #we find a string bound by ; without a "
+
+        #what this means is we need to keep finding a ;
+        #that doesn't have " within its bounds
         while end > 0 and s.count(b'"', 0, end) % 2:
             end = s.find(b';', end + 1)
         if end < 0:

@@ -48,6 +48,6 @@ def _parse_header_params(s):
         s = s[end:]
     return plist
 
-s = 'multipart/form-data"; boundary=---------------------------9051914041"544843365972754266'
+s = 'multipart/form-data"; jhkh; boundary=---------------------------9051914041"544843365972754266; boundary=-----------12312312'
 
 print parse_header(s)
