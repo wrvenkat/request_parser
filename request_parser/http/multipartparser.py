@@ -711,7 +711,9 @@ def _parse_header_params(s):
         #we find a string bound by ; without a "
 
         #what this means is we need to keep finding a ;
-        #that doesn't have " within its bounds
+        #that doesn't have " within its boundary
+        #once such a sequence is found, it hopefully
+        #is of the form 'boundary=------12312312312312'
         while end > 0 and s.count(b'"', 0, end) % 2:
             end = s.find(b';', end + 1)
         if end < 0:
