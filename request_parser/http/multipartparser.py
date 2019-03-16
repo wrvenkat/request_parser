@@ -458,6 +458,8 @@ class ChunkIter:
 class InterBoundaryIter:
     """
     A Producer that will iterate over boundaries.
+    Returns a LazyStream for any inter-boundary data that is encapsulated by
+    BoundaryIter.
     """
     def __init__(self, stream, boundary):
         self._stream = stream
@@ -595,7 +597,7 @@ def exhaust(stream_or_iterable):
 
 def parse_boundary_stream(stream, max_header_size):
     """
-    Parse one and exactly one stream that encapsulates a boundary.
+    Parse one and exactly one stream that's encpasulated within a boundary.
     """
     # Stream at beginning of header, look for end of header
     # and parse it if found. The header must fit within one
@@ -646,12 +648,18 @@ def parse_boundary_stream(stream, max_header_size):
 
         outdict[name] = value, params
 
+    #if the stream if raw, then put it back
+    #into the stream for it to be read byt the main parser
     if TYPE == RAW:
         stream.unget(chunk)
 
     return (TYPE, outdict, stream)
 
 class Parser:
+    """
+    Parser class that parses inter-boudary data to return,
+    item_type, meta_data, field_stream.
+    """
     def __init__(self, stream, boundary):
         self._stream = stream
         self._separator = b'--' + boundary
