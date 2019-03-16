@@ -183,15 +183,17 @@ class MultiPartParser:
                             'settings.DATA_UPLOAD_MAX_NUMBER_FIELDS.'
                         )
 
-                    # Avoid reading more than DATA_UPLOAD_MAX_MEMORY_SIZE.
+                    # Avoid reading more than DATA_UPLOAD_MAX_MEMORY_SIZE.                    
                     if settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None:
                         read_size = settings.DATA_UPLOAD_MAX_MEMORY_SIZE - num_bytes_read
 
                     # This is a post field, we can just set it in the post
                     if transfer_encoding == 'base64':
+                        #read only for the remaining size
                         raw_data = field_stream.read(size=read_size)
                         num_bytes_read += len(raw_data)
                         try:
+                            #decode the data read
                             data = base64.b64decode(raw_data)
                         except binascii.Error:
                             data = raw_data
@@ -201,6 +203,8 @@ class MultiPartParser:
 
                     # Add two here to make the check consistent with the
                     # x-www-form-urlencoded check that includes '&='.
+                    #QUESTION: We can't implement buffered reading if we
+                    #have only read part of a stream. Can we?
                     num_bytes_read += len(field_name) + 2
                     if (settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None and
                             num_bytes_read > settings.DATA_UPLOAD_MAX_MEMORY_SIZE):
@@ -296,9 +300,6 @@ class MultiPartParser:
         for i, handler in enumerate(self._upload_handlers):
             file_obj = handler.file_complete(counters[i])
             if file_obj:
-                #There doesn't seem to be any signal handling going on here?
-                #TODO: Revisit this after going through parse().
-
                 # If it returns a file object, then set the files dict.
                 self._files.appendlist(force_text(old_field_name, self._encoding, errors='replace'), file_obj)
                 break
