@@ -1,4 +1,4 @@
-from utils.datastructures import MultiValueDict
+from request_parser.utils.datastructures import MultiValueDict
 
 multiValDict = MultiValueDict({'name': ['Adrian', 'Simon'], 'position': ['Developer']})
 print multiValDict['name']
