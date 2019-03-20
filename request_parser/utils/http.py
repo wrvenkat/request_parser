@@ -5,21 +5,11 @@ import re
 import unicodedata
 from binascii import Error as BinasciiError
 from email.utils import formatdate
-#from urllib.parse import (
-#    ParseResult, SplitResult, _coerce_args, _splitnetloc, _splitparams, quote,
-#    quote_plus, scheme_chars, unquote, unquote_plus,
-#    urlencode as original_urlencode, uses_params,
-#)
-from urllib import (
-    quote, quote_plus, unquote, unquote_plus,
-    urlencode as original_urlencode
-)
-from urlparse import (
-    ParseResult, SplitResult, scheme_chars
-)
 
 from future.backports.urllib.parse import (
-    _coerce_args, _splitnetloc, _splitparams, uses_params
+    ParseResult, SplitResult, _coerce_args, _splitnetloc, _splitparams, quote,
+    quote_plus, scheme_chars, unquote, unquote_plus,
+    urlencode as original_urlencode, uses_params,
 )
 
 from request_parser.exceptions.exceptions import TooManyFieldsSent
