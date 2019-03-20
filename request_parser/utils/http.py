@@ -14,7 +14,6 @@ from future.backports.urllib.parse import (
 
 from request_parser.exceptions.exceptions import TooManyFieldsSent
 from request_parser.utils.datastructures import MultiValueDict
-#from django.utils.functional import keep_lazy_text
 
 #Python 2 replacement for raise_from
 from six import reraise as raise_
