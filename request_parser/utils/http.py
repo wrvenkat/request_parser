@@ -17,13 +17,9 @@ from urllib import (
 from urlparse import (
     ParseResult, SplitResult, scheme_chars
 )
-import six.moves.urllib.parse as url_parse
-#from six.moves.urllib import (
-#    _coerce_args, _splitnetloc, _splitparams
-#)
 
 from future.backports.urllib.parse import (
-    _coerce_args, _splitnetloc, _splitparams
+    _coerce_args, _splitnetloc, _splitparams, uses_params
 )
 
 from request_parser.exceptions.exceptions import TooManyFieldsSent
@@ -322,7 +318,7 @@ def _urlparse(url, scheme='', allow_fragments=True):
     url, scheme, _coerce_result = _coerce_args(url, scheme)
     splitresult = _urlsplit(url, scheme, allow_fragments)
     scheme, netloc, url, query, fragment = splitresult    
-    if scheme in url_parse.uses_params and ';' in url:
+    if scheme in uses_params and ';' in url:
         url, params = _splitparams(url)
     else:
         params = ''
