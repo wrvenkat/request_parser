@@ -18,10 +18,13 @@ from urlparse import (
     ParseResult, SplitResult, scheme_chars
 )
 import six.moves.urllib.parse as url_parse
-from six.moves.urllib import (
+#from six.moves.urllib import (
+#    _coerce_args, _splitnetloc, _splitparams
+#)
+
+from future.backports.urllib.parse import (
     _coerce_args, _splitnetloc, _splitparams
 )
-
 
 from request_parser.exceptions.exceptions import TooManyFieldsSent
 from request_parser.utils.datastructures import MultiValueDict
