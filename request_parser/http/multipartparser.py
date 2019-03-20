@@ -9,12 +9,9 @@ import binascii
 import cgi
 
 from six import reraise as raise_from
-#from compat.six import raise_from
-#import six.moves.urllib as urllib
-from urllib import unquote
+from future.backports.urllib.parse import unquote
 
 import request_parser.conf.settings as settings
-#from django.burp.conf.settings import settings
 from request_parser.exceptions.exceptions import (
     RequestDataTooBig, SuspiciousMultipartForm, TooManyFieldsSent,
 )

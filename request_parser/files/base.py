@@ -4,7 +4,6 @@ from io import BytesIO, StringIO, UnsupportedOperation
 from request_parser.files.utils import FileProxyMixin
 #from django.utils.functional import cached_property
 
-
 class File(FileProxyMixin):
     DEFAULT_CHUNK_SIZE = 64 * 2 ** 10
 
