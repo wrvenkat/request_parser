@@ -16,7 +16,7 @@ def test1():
 
     META = {
         'CONTENT_LENGTH' : 554,
-        'CONTENT_TYPE' : 'multipart/form-data; boundary=---------------------------9051914041544843365972754266'
+        'CONTENT_TYPE' : 'multipart/form-data; boundary=-------------------------9051914041544843365972754266'
     }
 
     test_dir = "multipart test files/"

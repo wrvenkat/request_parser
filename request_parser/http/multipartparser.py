@@ -468,6 +468,9 @@ class InterBoundaryIter:
 
     #def __next__(self): <- Python 3
     def next(self): #<- Python 2.x
+        #note that while the class is supposed to be handling the iteration over
+        #each boundary, it's deferring it to BoundaryIter which skips over boundaries
+        #as the POST body stream is parsed
         try:
             #create a new-stream from the bytes-set returned by BoundaryIter
             return LazyStream(BoundaryIter(self._stream, self._boundary))
@@ -669,6 +672,7 @@ class Parser:
         #And a boundaryStream is the stream of bytes between boundaries
         for sub_stream in boundarystream:
             # Iterate over each part
+            #to return item_type, meta_data, field_stream
             yield parse_boundary_stream(sub_stream, 1024)
 
 def parse_header(line):
