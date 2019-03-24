@@ -12,7 +12,7 @@ from request_parser.files.base import File
 __all__ = ('UploadedFile', 'TemporaryUploadedFile', 'InMemoryUploadedFile', 'SimpleUploadedFile')
 
 
-class UploadedFile(File):
+class UploadedFile(File, object):
     """
     An abstract uploaded file (``TemporaryUploadedFile`` and
     ``InMemoryUploadedFile`` are the built-in concrete subclasses).
@@ -51,7 +51,7 @@ class UploadedFile(File):
     name = property(_get_name, _set_name)
 
 
-class TemporaryUploadedFile(UploadedFile):
+class TemporaryUploadedFile(UploadedFile, object):
     """
     A file uploaded to a temporary location (i.e. stream-to-disk).
     """
@@ -74,7 +74,7 @@ class TemporaryUploadedFile(UploadedFile):
             pass
 
 
-class InMemoryUploadedFile(UploadedFile):
+class InMemoryUploadedFile(UploadedFile, object):
     """
     A file uploaded into memory (i.e. stream-to-memory).
     """
@@ -95,7 +95,7 @@ class InMemoryUploadedFile(UploadedFile):
         return False
 
 
-class SimpleUploadedFile(InMemoryUploadedFile):
+class SimpleUploadedFile(InMemoryUploadedFile, object):
     """
     A simple representation of a file, which just has content, size, and a name.
     """

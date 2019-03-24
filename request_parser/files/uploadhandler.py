@@ -128,7 +128,7 @@ class FileUploadHandler:
         pass
 
 
-class TemporaryFileUploadHandler(FileUploadHandler):
+class TemporaryFileUploadHandler(FileUploadHandler, object):
     """
     Upload handler that streams data into a temporary file.
     """
@@ -148,7 +148,7 @@ class TemporaryFileUploadHandler(FileUploadHandler):
         return self.file
 
 
-class MemoryFileUploadHandler(FileUploadHandler):
+class MemoryFileUploadHandler(FileUploadHandler, object):
     """
     File upload handler to stream uploads into memory (used for small files).
     """
