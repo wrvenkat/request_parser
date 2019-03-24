@@ -5,7 +5,7 @@ class Settings:
 
 FILE_UPLOAD_TEMP_DIR = '.'
 
-FILE_UPLOAD_MAX_MEMORY_SIZE = 4096
+FILE_UPLOAD_MAX_MEMORY_SIZE = 80 * ((2 ** 10) * (2 ** 10))
 
 DEFAULT_CHARSET = 'utf-8'
 

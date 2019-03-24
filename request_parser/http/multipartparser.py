@@ -148,8 +148,6 @@ class MultiPartParser:
         # To limit the amount of data read from the request.
         read_size = None
 
-        #The BEAST of parsing is below!
-
         try:
             for item_type, meta_data, field_stream in Parser(stream, self._boundary):
                 if old_field_name:
