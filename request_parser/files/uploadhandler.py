@@ -163,7 +163,7 @@ class MemoryFileUploadHandler(FileUploadHandler):
         self.activated = content_length <= settings.FILE_UPLOAD_MAX_MEMORY_SIZE
 
     def new_file(self, *args, **kwargs):
-        super().new_file(*args, **kwargs)
+        super(MemoryFileUploadHandler, self).new_file(*args, **kwargs)
         if self.activated:
             self.file = BytesIO()
             raise StopFutureHandlers()

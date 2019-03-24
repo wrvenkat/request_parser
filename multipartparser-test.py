@@ -26,7 +26,8 @@ def test1():
     with open(test_file1, 'r') as stream1:
         try:
             multipartparser_1 = MultiPartParser(META, stream1, upload_handlers)
-            multipartparser_1.parse()
+            post, files = multipartparser_1.parse()
+            print "Done parsing!"
         except Exception as e:
             print "Exception is: {}".format(e)
     

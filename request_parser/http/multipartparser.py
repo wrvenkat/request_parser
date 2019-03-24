@@ -663,6 +663,8 @@ class Parser:
     """
     def __init__(self, stream, boundary):
         self._stream = stream
+        #the actual boundary in the HTTP header is '--' shorter than the
+        #separating boundary in the POST body
         self._separator = b'--' + boundary
 
     def __iter__(self):
