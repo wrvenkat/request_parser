@@ -232,6 +232,8 @@ class MultiPartParser:
                                     field_name, file_name, content_type,
                                     content_length, charset, content_type_extra,
                                 )
+                            #if a handler is handling a new file, it raises StopFutureHandlers
+                            #to prevent others from handling it
                             except StopFutureHandlers:
                                 break
 
@@ -257,13 +259,17 @@ class MultiPartParser:
 
                             for i, handler in enumerate(handlers):
                                 chunk_length = len(chunk)
+                                #stream data into the temp file
                                 chunk = handler.receive_data_chunk(chunk, counters[i])
                                 counters[i] += chunk_length
+
+                                #None means no errors, which means we break
                                 if chunk is None:
                                     # Don't continue if the chunk received by
                                     # the handler is None.
                                     break
 
+                    #QUESTION: When does this occur?            
                     except SkipFile:
                         self._close_files()
                         # Just use up the rest of this file...
@@ -274,6 +280,7 @@ class MultiPartParser:
                 else:
                     # If this is neither a FIELD or a FILE, just exhaust the stream.
                     exhaust(stream)
+        #QUESTION: When does this occur?
         except StopUpload as e:
             self._close_files()
             if not e.connection_reset:
@@ -284,6 +291,8 @@ class MultiPartParser:
 
         # Signal that the upload has completed.
         # any() shortcircuits if a handler's upload_complete() returns a value.
+
+        #Perform any clean up after file upload is complete
         any(handler.upload_complete() for handler in handlers)
         self._post._mutable = False
         return self._post, self._files

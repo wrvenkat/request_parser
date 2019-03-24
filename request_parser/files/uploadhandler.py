@@ -132,6 +132,11 @@ class TemporaryFileUploadHandler(FileUploadHandler, object):
     """
     Upload handler that streams data into a temporary file.
     """
+
+    #QUESTION: There's no handle_raw_input(). Then how's a file upload handled that's
+    #not in-memory?
+
+
     def new_file(self, *args, **kwargs):
         """
         Create the file object to append to as data is coming in.
