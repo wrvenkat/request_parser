@@ -8,7 +8,6 @@ from urllib import quote, urlencode
     #urljoin, urlsplit
 
 import request_parser.conf.settings as settings
-#from django.core import signing
 from request_parser.exceptions.exceptions import (
     ImproperlyConfigured, RequestDataTooBig,
 )
@@ -16,7 +15,6 @@ from request_parser.files import uploadhandler
 from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict
 from request_parser.utils.encoding import escape_uri_path, iri_to_uri
-#from django.utils.functional import cached_property
 from request_parser.utils.http import is_same_domain, limited_parse_qsl
 
 from six import reraise as raise_
@@ -52,10 +50,12 @@ class HttpRequest:
     _encoding = None
     _upload_handlers = []
 
-    def __init__(self):
+    def __init__(self, request_stream):
         # WARNING: The `WSGIRequest` subclass doesn't call `super`.
         # Any variable assignment made here should also happen in
         # `WSGIRequest.__init__()`.
+
+        self.request_stream = request_stream
 
         self.GET = QueryDict(mutable=True)
         self.POST = QueryDict(mutable=True)
@@ -207,13 +207,25 @@ class HttpRequest:
             raise AttributeError("You cannot set the upload handlers after the upload has been processed.")
         self._upload_handlers = upload_handlers
 
-    def parse_file_upload(self, META, post_data):
+    def parse(self):
+        """
+        Entry point for parsing an Http Request.
+
+        Accepts a stream that represents the request_stream
+        """
+        self._parse_headers()
+        self._load_post_and_files()
+
+    def _parse_file_upload(self, META, post_data):
         """Return a tuple of (POST QueryDict, FILES MultiValueDict)."""
         parser = MultiPartParser(META, post_data, self.upload_handlers, self.encoding)
         return parser.parse()
 
     @property
     def body(self):
+        """
+        Return raw body as a byte stream.
+        """
         if not hasattr(self, '_body'):
             if self._read_started:
                 raise RawPostDataException("You cannot access body after reading from request's data stream")
@@ -237,6 +249,12 @@ class HttpRequest:
             #when self.read() is called, it points to _body as a stream
             self._stream = BytesIO(self._body)
         return self._body
+
+    def _parse_headers(self):
+        """
+        Parse the request headers.
+        """
+        #TODO: Write the code for parsing the request headers.
 
     def _mark_post_parse_error(self):
         self._post = QueryDict()
@@ -266,11 +284,12 @@ class HttpRequest:
                 #create a new stream out of _body
                 data = BytesIO(self._body)
             else:
+                #QUESTION: What does this do?
                 data = self
             
             try:
                 #returns POST QueryDict and MultiValueDict for _files
-                self._post, self._files = self.parse_file_upload(self.META, data)
+                self._post, self._files = self._parse_file_upload(self.META, data)
             except MultiPartParserError:
                 # An error occurred while parsing POST data. Since when
                 # formatting the error the request handler might access
