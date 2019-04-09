@@ -2,7 +2,6 @@
 Global Django exception and warning classes.
 """
 
-
 class FieldDoesNotExist(Exception):
     """The requested model field does not exist"""
     pass
@@ -102,7 +101,7 @@ class ValidationError(Exception):
         list or dictionary can be an actual `list` or `dict` or an instance
         of ValidationError with its `error_list` or `error_dict` attribute set.
         """
-        super().__init__(message, code, params)
+        super(ValidationError, self).__init__(message, code, params)
 
         if isinstance(message, ValidationError):
             if hasattr(message, 'error_dict'):

@@ -27,6 +27,12 @@ host_validation_re = re.compile(r"^([a-z0-9.-]+|\[[a-f0-9]*:[a-f0-9\.:]+\])(:\d+
 class UnreadablePostError(IOError):
     pass
 
+class InvalidHttpRequest(Exception):
+    """The provided stream is not a request"""
+
+    def __init__(self, message, code=None, params=None):
+        super(InvalidHttpRequest, self).__init__(message, code, params)
+
 class RawPostDataException(Exception):
     """
     You cannot access raw_post_data from a request that has
@@ -39,11 +45,12 @@ class NoHostFoundException(Exception):
     """
     Raised when no HOST header is not present in the request.
     """
+    pass
 
 class HttpRequest:
     """A basic HTTP request."""
 
-    #FEATURE: Implement request header parsing - as far as now, the request header
+    #TODO: Implement request header parsing - as far as now, the request header
     #parsing is handled by a sub-class e.g. WSGIRequest.
 
     # The encoding used in GET/POST dicts. None means use default setting.
@@ -255,6 +262,16 @@ class HttpRequest:
         Parse the request headers.
         """
         #TODO: Write the code for parsing the request headers.
+
+        #Find the first index where '\r\bn\r\n' is present
+
+        #isolate the start till end of that part
+
+        #assign the rest of the stream/bytes to the request_stream
+
+        #split the request_header section into lines separated by '\r\n'.
+
+        #parse each such line into further key-value pair of dictionary
 
     def _mark_post_parse_error(self):
         self._post = QueryDict()
