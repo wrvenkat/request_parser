@@ -13,9 +13,10 @@ from request_parser.exceptions.exceptions import (
 )
 from request_parser.files import uploadhandler
 from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError
-from request_parser.utils.datastructures import ImmutableList, MultiValueDict
+from request_parser.utils.datastructures import ImmutableList, MultiValueDict, ImmutableMultiValueDict
 from request_parser.utils.encoding import escape_uri_path, iri_to_uri
 from request_parser.utils.http import is_same_domain, limited_parse_qsl
+from request_parser.http.multipartparser import LazyStream
 
 from six import reraise as raise_
 
@@ -49,9 +50,6 @@ class NoHostFoundException(Exception):
 
 class HttpRequest:
     """A basic HTTP request."""
-
-    #TODO: Implement request header parsing - as far as now, the request header
-    #parsing is handled by a sub-class e.g. WSGIRequest.
 
     # The encoding used in GET/POST dicts. None means use default setting.
     _encoding = None
@@ -261,17 +259,28 @@ class HttpRequest:
         """
         Parse the request headers.
         """
-        #TODO: Write the code for parsing the request headers.
+        request_header_stream = LazyStream(self.request_stream)
+        request_header = ''
 
-        #Find the first index where '\r\bn\r\n' is present
+        #read until we find a '\r\n\r\n' sequence
+        request_header_end = -1
+        while request_header_end == -1:
+            chunk = request_header_stream.read(settings.MAX_HEADER_SIZE)
+            request_header_end = chunk.find(b'\r\n\r\n')
+            if request_header_end != -1:
+                request_header += chunk[:request_header_end]
+            else:
+                request_header += chunk
+        request_header+= b'\r\n'
+        
+        #account for '\r\n\r\n'
+        request_header_end += 4
+        #put back anything starting from the request body
+        #back onto the stream
+        request_header_stream.unget(chunk[request_header_end:])
 
-        #isolate the start till end of that part
-
-        #assign the rest of the stream/bytes to the request_stream
-
-        #split the request_header section into lines separated by '\r\n'.
-
-        #parse each such line into further key-value pair of dictionary
+        #parse the request header
+        return parse_headers(request_header)
 
     def _mark_post_parse_error(self):
         self._post = QueryDict()
@@ -564,3 +573,51 @@ def split_domain_port(host):
     # Remove a trailing dot (if present) from the domain.
     domain = domain[:-1] if domain.endswith('.') else domain
     return domain, port
+
+def parse_headers(request_header_stream):
+    """
+    Parse the request header's individual headers into key, value-list
+    pairs and return them.
+    """
+    request_header = ''
+    request_headers = {}
+    
+    start = 0
+    end = request_header_stream.find(b'\r\n', 1)
+    if end:
+        #TODO: parse the first line of the request
+        request_line = request_header_stream[start:end]
+        print "Request Line: {}".format(request_line)
+    end+=2
+    request_header_stream = request_header_stream[end:]
+    start = 0
+    
+    end = request_header_stream.find(b'\r\n', 1)
+    while end != -1:
+        request_header = request_header_stream[start:end]
+        end += 2
+        request_header_stream = request_header_stream[end:]
+        start = 0
+
+        #parse the request header
+        #TODO: Use MultiValueDict
+        end_index = request_header.find(b':')
+        if end_index:
+            header =  request_header[:end_index]
+            header = header.encode('ascii','')
+            value = request_header[end_index+1:]
+            value = value.strip()
+            value = value.encode('ascii','')
+            if header in request_headers:
+                request_headers[header].append(value)
+            else:
+                request_headers[header] = list()
+                request_headers[header].append(value)
+        else:
+            raise InvalidHttpRequest("Invalid request header: {}".format(header))        
+        end = request_header_stream.find(b'\r\n', 1)
+    
+    #construct an immutable version of MultiValueDict for the request headers
+    request_headers = ImmutableMultiValueDict(request_headers)
+    
+    return request_headers

@@ -5,6 +5,9 @@ class Settings:
 #Directory where file upload files will be stored
 FILE_UPLOAD_TEMP_DIR = '.'
 
+#max header size of a header
+MAX_HEADER_SIZE = 16
+
 #Default max size of uploaded file is 80MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 80 * ((2 ** 10) * (2 ** 10))
 

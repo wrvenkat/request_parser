@@ -1,7 +1,7 @@
 import os, inspect
 
 from request_parser.http.multipartparser import LazyStream
-from request_parser.utils.datastructures import MultiValueDict
+from request_parser.utils.datastructures import ImmutableMultiValueDict, ImmutableList
 
 request_stream = ''
 max_header_size = 64
@@ -19,6 +19,7 @@ def parse_headers(request_header_stream):
     if end:
         #TODO: parse the first line of the request
         request_line = request_header_stream[start:end]
+        print "Request Line: {}".format(request_line)
     end+=2
     request_header_stream = request_header_stream[end:]
     start = 0
@@ -40,7 +41,7 @@ def parse_headers(request_header_stream):
             value = value.strip()
             value = value.encode('ascii','')
             if header in request_headers:
-                header.append(value)
+                request_headers[header].append(value)
             else:
                 request_headers[header] = list()
                 request_headers[header].append(value)
@@ -49,6 +50,9 @@ def parse_headers(request_header_stream):
             break
         
         end = request_header_stream.find(b'\r\n', 1)        
+
+    #construct an immutable version of MultiValueDict for the request headers
+    request_headers = ImmutableMultiValueDict(request_headers)
 
     return request_headers
 
@@ -88,9 +92,14 @@ def parse_test():
 
     with open(test_file1, 'r') as stream1:
         try:
-            headers = parse_header_bootstrap(stream1)            
-            print "Done parsing!"
+            headers = parse_header_bootstrap(stream1)
             print headers
+
+            #This should raise an error
+            #headers['Content-Type'] = list()
+            #This should also raise an error
+            print headers.getlist('Cookies')
+            headers.setlist('Cookies', ['new-cookie1=new-value1', 'new-cookie2=vew-value2'])
         except Exception as e:
             print "Exception is: {}".format(e)
 

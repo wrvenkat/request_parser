@@ -269,3 +269,73 @@ class ImmutableList(tuple):
     remove = complain
     sort = complain
     reverse = complain
+
+class ImmutableMultiValueDict(MultiValueDict):
+    """
+    A subclass of MultivalueDict which is also immutable by default.
+    NOTE: The values themselves however are not immutable.
+    """
+
+    _mutable = False
+
+    def __init__(self, key_to_list_mapping=()):
+        super(ImmutableMultiValueDict, self).__init__(key_to_list_mapping)
+
+    def _assert_mutable(self):
+        if not self._mutable:
+            raise AttributeError("This ImmutableMultiValueDict instance is immutable.")
+
+    def __setitem__(self, key, value):
+        #set the value as a list i.e [value]
+        self._assert_mutable()
+        super(ImmutableMultiValueDict, self).__setitem__(key, [value])
+
+    def __delitem__(self, key):
+        self._assert_mutable()
+        super(ImmutableMultiValueDict, self).__delitem__(key)
+
+    def __setstate__(self, obj_dict):
+        #retrieve the dictionary associated with '_data' key
+        #with a default value being an empty dictionary
+        data = obj_dict.pop('_data', {})
+        #for each (key, value) tuple in data
+        for k, v in data.items():
+            #create the list with value v for key k
+            super(ImmutableMultiValueDict, self).setlist(k, v)
+        #update the attribute dictionary from the returned obj_dict
+        #the update automatically iterates through the key, value pair in #obj_dict and populates the attributes; since there's no parameter
+        #with '_dict' key, that item is ignored.
+        self.__dict__.update(obj_dict)
+
+    def setlist(self, key, potential_list):
+        """
+        sets a list for a key.
+        Converts a single value to a list item.
+        TODO: Is this even required? Not sure. Let it be as is for now.
+        """
+        self._assert_mutable()
+        super(ImmutableMultiValueDict, self).setlist(key, potential_list)
+
+    def setdefault(self, key, default=None):
+        """
+        Set the default value for a key if key is not in the dict
+        """
+        self._assert_mutable()
+        super(ImmutableMultiValueDict, self).setdefault(key, default)
+
+    def setlistdefault(self, key, default_list=None):
+        """
+        Set a default list for a key if key not in the dict
+        """
+        self._assert_mutable()
+        super(ImmutableMultiValueDict, self).setlistdefault(key, default_list)
+
+    def appendlist(self, key, value):
+        """Append an item to the internal list associated with key."""
+        self._assert_mutable()
+        super(ImmutableMultiValueDict, self).appendlist(key, value)
+
+    def update(self, *args, **kwargs):
+        """Extend rather than replace existing key lists."""
+        self._assert_mutable()
+        super(ImmutableMultiValueDict, self).update(args, kwargs)
