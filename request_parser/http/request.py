@@ -56,10 +56,6 @@ class HttpRequest:
     _upload_handlers = []
 
     def __init__(self, request_stream):
-        # WARNING: The `WSGIRequest` subclass doesn't call `super`.
-        # Any variable assignment made here should also happen in
-        # `WSGIRequest.__init__()`.
-
         self.request_stream = request_stream
 
         self.GET = QueryDict(mutable=True)

@@ -6,45 +6,36 @@ class FieldDoesNotExist(Exception):
     """The requested model field does not exist"""
     pass
 
-
 class AppRegistryNotReady(Exception):
     """The django.apps registry is not populated yet"""
     pass
-
 
 class ObjectDoesNotExist(Exception):
     """The requested object does not exist"""
     silent_variable_failure = True
 
-
 class MultipleObjectsReturned(Exception):
     """The query returned multiple objects when only one was expected."""
     pass
 
-
 class SuspiciousOperation(Exception):
     """The user did something suspicious"""
-
 
 class SuspiciousMultipartForm(SuspiciousOperation):
     """Suspect MIME request in multipart form data"""
     pass
 
-
 class SuspiciousFileOperation(SuspiciousOperation):
     """A Suspicious filesystem operation was attempted"""
     pass
-
 
 class DisallowedHost(SuspiciousOperation):
     """HTTP_HOST header contains invalid value"""
     pass
 
-
 class DisallowedRedirect(SuspiciousOperation):
     """Redirect to scheme not in allowed list"""
     pass
-
 
 class TooManyFieldsSent(SuspiciousOperation):
     """
@@ -53,7 +44,6 @@ class TooManyFieldsSent(SuspiciousOperation):
     """
     pass
 
-
 class RequestDataTooBig(SuspiciousOperation):
     """
     The size of the request (excluding any file uploads) exceeded
@@ -61,34 +51,27 @@ class RequestDataTooBig(SuspiciousOperation):
     """
     pass
 
-
 class PermissionDenied(Exception):
     """The user did not have permission to do that"""
     pass
-
 
 class ViewDoesNotExist(Exception):
     """The requested view does not exist"""
     pass
 
-
 class MiddlewareNotUsed(Exception):
     """This middleware is not used in this server configuration"""
     pass
-
 
 class ImproperlyConfigured(Exception):
     """Django is somehow improperly configured"""
     pass
 
-
 class FieldError(Exception):
     """Some kind of problem with a model field."""
     pass
 
-
 NON_FIELD_ERRORS = '__all__'
-
 
 class ValidationError(Exception):
     """An error while validating data."""
@@ -176,7 +159,12 @@ class ValidationError(Exception):
     def __repr__(self):
         return 'ValidationError(%s)' % self
 
-
 class EmptyResultSet(Exception):
     """A database query predicate is impossible."""
+    pass
+
+class InputStreamExhausted(Exception):
+    """
+    No more reads are allowed from this device.
+    """
     pass
