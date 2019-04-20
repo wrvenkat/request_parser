@@ -2,6 +2,8 @@ import os, inspect
 
 from request_parser.http.multipartparser import LazyStream
 from request_parser.utils.datastructures import ImmutableMultiValueDict, ImmutableList
+import request_parser.conf.settings as settings
+from request_parser.http.request import InvalidHttpRequest
 
 request_stream = ''
 max_header_size = 64
@@ -11,19 +13,20 @@ def parse_headers(request_header_stream):
     Parse the request header's individual headers into key, value-list
     pairs and return them.
     """
-    request_header = ''
+    request_line = ''
     request_headers = {}
-    
     start = 0
+
     end = request_header_stream.find(b'\r\n', 1)
-    if end:
-        #TODO: parse the first line of the request
+    if end != -1:
         request_line = request_header_stream[start:end]
-        print "Request Line: {}".format(request_line)
+    else:
+        raise InvalidHttpRequest("Invalid request.")
     end+=2
     request_header_stream = request_header_stream[end:]
     start = 0
     
+    #iterate through each header line
     end = request_header_stream.find(b'\r\n', 1)
     while end != -1:
         request_header = request_header_stream[start:end]
@@ -32,9 +35,8 @@ def parse_headers(request_header_stream):
         start = 0
 
         #parse the request header
-        #TODO: Use MultiValueDict
         end_index = request_header.find(b':')
-        if end_index:
+        if end_index != -1:
             header =  request_header[:end_index]
             header = header.encode('ascii','')
             value = request_header[end_index+1:]
@@ -46,15 +48,17 @@ def parse_headers(request_header_stream):
                 request_headers[header] = list()
                 request_headers[header].append(value)
         else:
-            #TODO: raise error
-            break
-        
-        end = request_header_stream.find(b'\r\n', 1)        
-
+            raise InvalidHttpRequest("Invalid request header: {}".format(header))
+        end = request_header_stream.find(b'\r\n', 1)
+    
+    #sanity check
+    if len(request_headers) == 0:
+        raise InvalidHttpRequest("Invalid request.")
+    
     #construct an immutable version of MultiValueDict for the request headers
     request_headers = ImmutableMultiValueDict(request_headers)
-
-    return request_headers
+    
+    return request_line, request_headers
 
 def parse_header_bootstrap(request):
     request_stream = LazyStream(request)
@@ -63,7 +67,7 @@ def parse_header_bootstrap(request):
     #read until we find a '\r\n\r\n' sequence
     request_header_end = -1
     while request_header_end == -1:
-        chunk = request_stream.read(max_header_size)
+        chunk = request_stream.read(settings.MAX_HEADER_SIZE)
         request_header_end = chunk.find(b'\r\n\r\n')
         if request_header_end != -1:
             request_header += chunk[:request_header_end]
@@ -71,6 +75,10 @@ def parse_header_bootstrap(request):
             request_header += chunk
     request_header+= b'\r\n'
     
+    #sanity check
+    if request_header_end == -1:
+        raise InvalidHttpRequest("Invalid HTTP request header.")
+
     #accommodate for '\r\n\r\n'
     request_header_end += 4
     #put back anything starting from the request body
@@ -92,7 +100,8 @@ def parse_test():
 
     with open(test_file1, 'r') as stream1:
         try:
-            headers = parse_header_bootstrap(stream1)
+            request_line, headers = parse_header_bootstrap(stream1)
+            print "Request_line is : {}".format(request_line)
             print headers
 
             #This should raise an error
