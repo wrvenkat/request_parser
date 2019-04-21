@@ -65,6 +65,8 @@ class HttpRequest:
         self.META = {}
         self.FILES = MultiValueDict()
 
+        self.scheme = ''
+        self.protocol_info = ''
         self.path = ''
         self.path_info = ''
         self.method = None
@@ -129,16 +131,6 @@ class HttpRequest:
 
     def _current_scheme_host(self):
         return '{}://{}'.format(self.scheme, self.get_host())
-
-    def _get_scheme(self):
-        """
-        Return scheme
-        """
-        return self.scheme
-
-    @property
-    def scheme(self):
-        return self._get_scheme()
 
     def is_secure(self):
         return self.scheme == 'https'
@@ -242,7 +234,7 @@ class HttpRequest:
         request_header_end = -1
         while request_header_end == -1:
             chunk = request_header_stream.read(settings.MAX_HEADER_SIZE)
-            if chunk is None:
+            if chunk == '':
                 break
             request_header_end = chunk.find(b'\r\n\r\n')
             if request_header_end != -1:
@@ -253,7 +245,7 @@ class HttpRequest:
 
         #sanity check
         if request_header_end == -1:
-            raise InvalidHttpRequest("Invalid HTTP request header.")
+            raise InvalidHttpRequest("Invalid HTTP request.", 400, '')
         
         #account for '\r\n\r\n'
         request_header_end += 4
@@ -274,7 +266,7 @@ class HttpRequest:
         host = ''
         port = None
         #if the request is an HTTP_PROXY request
-        if meta_dict['SCHEME'] is not None:
+        if meta_dict['SCHEME'] != '':
             host = meta_dict['DOMAIN']
         else:
             if 'Host' in request_headers:
@@ -282,20 +274,28 @@ class HttpRequest:
             else:
                 raise NoHostFoundException("No HOST header found in the HTTP request")
         
+        if len(meta_dict['SCHEME']) > 0:
+            self.scheme = meta_dict['SCHEME'].lower()
+        else:
+            self.scheme = 'UNKNOWN'
+
         #populate the server port
         host, port = split_domain_port(host)
-        if port is None:
+        self.META['HTTP_HOST'] = host
+        if port == '':
             if meta_dict['SCHEME'].lower() == 'https':
                 self.META['SERVER_PORT'] = 443
             elif meta_dict['SCHEME'].lower() == 'http':
                 self.META['SERVER_PORT'] = 80
+            else:
+                self.META['SERVER_PORT'] = 65536
         else:
             self.META['SERVER_PORT'] = port
 
-        if len(meta_dict['SCHEME']) > 0:
-            self.scheme = meta_dict['SCHEME'].lower()
-
+        self.method = meta_dict['METHOD']
         self.path = meta_dict['PATH']
+        self.protocol_info = meta_dict['PROTOCOL_INFO']
+        self.content_type = request_headers.get('Content-Type')
         self.META['QUERY_STRING'] = meta_dict['QUERY_STRING']
         self.GET = QueryDict(self.META['QUERT_STRING']) if self.META['QUERY_STRING'] else QueryDict(mutable=True)
         #Add request_headers dictionary into META dictionary
