@@ -18,6 +18,7 @@ from request_parser.utils.encoding import escape_uri_path, iri_to_uri
 from request_parser.utils.http import is_same_domain, limited_parse_qsl
 from request_parser.http.multipartparser import LazyStream
 from request_parser.utils.http import _urlparse as urlparse
+from constants import MetaDict
 
 from six import reraise as raise_
 
@@ -61,15 +62,19 @@ class HttpRequest:
 
         self.GET = QueryDict(mutable=True)
         self.POST = QueryDict(mutable=True)
-        self.COOKIES = {}
         self.META = {}
         self.FILES = MultiValueDict()
 
+        #represents a set of properties of an HTTP request
+        #that are essential for quick info gathering
+        #and those that should be easily changed
+        self.method = None
         self.scheme = ''
-        self.protocol_info = ''
+        self.host = ''
+        self.port = ''
         self.path = ''
         self.path_info = ''
-        self.method = None
+        self.protocol_info = ''
         self.content_type = None
         self.content_params = None
 
@@ -77,18 +82,6 @@ class HttpRequest:
         if self.method is None or not self.get_full_path():
             return '<%s>' % self.__class__.__name__
         return '<%s: %s %r>' % (self.__class__.__name__, self.method, self.get_full_path())
-
-    def get_host(self):
-        """
-        Return the HTTP host from the request URL if we're operating under a web-proxy or
-        from the request headers.
-        """
-        return self.META['HTTP_HOST']
-
-    def get_port(self):
-        """Return the port number for the request as a string."""
-        port = self.META['SERVER_PORT']
-        return str(port)
 
     def get_full_path(self, force_append_slash=False):
         return self._get_full_path(self.path, force_append_slash)
@@ -107,17 +100,8 @@ class HttpRequest:
             #add a '/' if force_append_slash is true and the path doesn't end with '/'
             escape_uri_path(path),            
             '/' if force_append_slash and not path.endswith('/') else '',
-            ('?' + iri_to_uri(self.META.get('QUERY_STRING', ''))) if self.META.get('QUERY_STRING', '') else ''
+            ('?' + iri_to_uri(self.META.get(MetaDict.ReqLine.QUERY_STRING, ''))) if self.META.get(MetaDict.ReqLine.QUERY_STRING, '') else ''
         )
-
-    def get_cookies(self, default=None):
-        """
-        Return a copy of the COOKIES list.
-
-        The list of cookies are not key, value params parsed.
-        """
-        cookies = self.COOKIES if self.COOKIES else default
-        return cookies
 
     def get_raw_uri(self):
         """
@@ -136,7 +120,7 @@ class HttpRequest:
         return self.scheme == 'https'
 
     def is_ajax(self):
-        if 'XMLHttpRequest' in self.META['REQUEST_HEADERS']:
+        if 'XMLHttpRequest' in self.META[MetaDict.Info.REQ_HEADERS]:
             return True
         return False
 
@@ -234,7 +218,7 @@ class HttpRequest:
         request_header_end = -1
         while request_header_end == -1:
             chunk = request_header_stream.read(settings.MAX_HEADER_SIZE)
-            if chunk == '':
+            if not chunk:
                 break
             request_header_end = chunk.find(b'\r\n\r\n')
             if request_header_end != -1:
@@ -255,51 +239,49 @@ class HttpRequest:
 
         #parse the request header
         request_line, request_headers = parse_request_headers(request_header)
-        meta_dict = request_line_parse(request_line)
-        
-        #find the necessary header and populate the META dictionary
-        if 'Cookies' in request_headers:
-            self.COOKIES = request_headers.getlist('Cookies')            
-        else:
-            self.COOKIES = []
+        meta_dict = parse_request_line(request_line)
 
+        #populate the properties and META info
         host = ''
         port = None
         #if the request is an HTTP_PROXY request
-        if meta_dict['SCHEME'] != '':
-            host = meta_dict['DOMAIN']
+        if meta_dict[MetaDict.ReqLine.DOMAIN]:
+            host = meta_dict[MetaDict.ReqLine.DOMAIN]
         else:
             if 'Host' in request_headers:
                 host = request_headers['Host']
+                del request_headers['Host']
             else:
                 raise NoHostFoundException("No HOST header found in the HTTP request")
         
-        if len(meta_dict['SCHEME']) > 0:
-            self.scheme = meta_dict['SCHEME'].lower()
+        #scheme
+        if meta_dict[MetaDict.ReqLine.SCHEME]:
+            self.scheme = meta_dict[MetaDict.ReqLine.SCHEME].lower()
         else:
             self.scheme = 'UNKNOWN'
 
-        #populate the server port
+        #populate the server host and port
         host, port = split_domain_port(host)
-        self.META['HTTP_HOST'] = host
-        if port == '':
-            if meta_dict['SCHEME'].lower() == 'https':
-                self.META['SERVER_PORT'] = 443
-            elif meta_dict['SCHEME'].lower() == 'http':
-                self.META['SERVER_PORT'] = 80
+        self.host = host
+        if not port:
+            if meta_dict[MetaDict.ReqLine.SCHEME].lower() == 'https':
+                port = 443
+            elif meta_dict[MetaDict.ReqLine.SCHEME].lower() == 'http':
+                port = 80
             else:
-                self.META['SERVER_PORT'] = 65536
-        else:
-            self.META['SERVER_PORT'] = port
+                #invalid port no.
+                port = 65536
+        self.port = port
 
-        self.method = meta_dict['METHOD']
-        self.path = meta_dict['PATH']
-        self.protocol_info = meta_dict['PROTOCOL_INFO']
+        self.method = meta_dict[MetaDict.ReqLine.METHOD]
+        self.path = meta_dict[MetaDict.ReqLine.PATH]
+        self.protocol_info = meta_dict[MetaDict.ReqLine.PROTO_INFO]
         self.content_type = request_headers.get('Content-Type')
-        self.META['QUERY_STRING'] = meta_dict['QUERY_STRING']
-        self.GET = QueryDict(self.META['QUERT_STRING']) if self.META['QUERY_STRING'] else QueryDict(mutable=True)
-        #Add request_headers dictionary into META dictionary
-        self.META['REQUEST_HEADERS'] = request_headers
+        del request_headers['Content-Type']
+        self.META[MetaDict.Info.QUERY_STRING] = meta_dict[MetaDict.ReqLine.QUERY_STRING]
+        self.GET = QueryDict(self.META[MetaDict.ReqLine.QUERY_STRING]) if self.META[MetaDict.ReqLine.QUERY_STRING] else QueryDict(mutable=True)
+        #Add a immutable version of request_headers dictionary into META dictionary
+        self.META[MetaDict.Info.REQ_HEADERS] = ImmutableMultiValueDict(request_headers)
 
     def _mark_post_parse_error(self):
         self._post = QueryDict()
@@ -598,7 +580,7 @@ def parse_request_headers(request_header_stream):
     Parse the request header's individual headers into key, value-list
     pairs.
 
-    Returns the request line and the key-value pair headers.
+    Returns the request line and a mutable key-value pair headers dictionary.
     """
     request_line = ''
     request_headers = {}
@@ -643,30 +625,35 @@ def parse_request_headers(request_header_stream):
         raise InvalidHttpRequest("Invalid request.")
     
     #construct an immutable version of MultiValueDict for the request headers
-    request_headers = ImmutableMultiValueDict(request_headers)
+    request_headers = MultiValueDict(request_headers)
     
     return request_line, request_headers
 
-def request_line_parse(request_line=''):
+def parse_request_line(request_line=''):
     """
     Parse the request line in an HTTP/HTTP Proxy request and return a dictionary with 8 entries:
     <METHOD> <SCHEME>://<DOMAIN>/<PATH>;<PARAMS>?<QUERY_STRING>#<FRAGMENT> <PROTOCOL_INFO>
     """
 
-    method, uri, protoccol_version = request_line.split(' ',3)
+    method, uri, protocol_version = ''
+    _splits = request_line.split(' ',3)
 
-    if method is None or uri is None or protoccol_version is None:
-        raise InvalidHttpRequest("Invalid request line.")
+    if len(_splits) > 3:
+        raise InvalidHttpRequest("Invalid request line.", 400)
+    method, uri, protocol_version = _splits
+
+    if not method or not uri or not protocol_version:
+        raise InvalidHttpRequest("Invalid request line.", 400)
     
     request_uri_result = urlparse(uri)
     request_line_result = {}
-    request_line_result['SCHEME'] = request_uri_result[0]
-    request_line_result['DOMAIN'] = request_uri_result[1]
-    request_line_result['PATH'] = request_uri_result[2]
-    request_line_result['PARAMS'] = request_uri_result[3]
-    request_line_result['QUERY_STRING'] = request_uri_result[4]
-    request_line_result['FRAGMENT'] = request_uri_result[5]
-    request_line_result['METHOD'] = method
-    request_line_result['PROTOCOL_INFO'] = protoccol_version
+    request_line_result[MetaDict.ReqLine.SCHEME] = request_uri_result[0]
+    request_line_result[MetaDict.ReqLine.DOMAIN] = request_uri_result[1]
+    request_line_result[MetaDict.ReqLine.PATH] = request_uri_result[2]
+    request_line_result[MetaDict.ReqLine.PARAMS] = request_uri_result[3]
+    request_line_result[MetaDict.ReqLine.QUERY_STRING] = request_uri_result[4]
+    request_line_result[MetaDict.ReqLine.FRAGMENT] = request_uri_result[5]
+    request_line_result[MetaDict.ReqLine.METHOD] = method
+    request_line_result[MetaDict.ReqLine.PROTO_INFO] = protocol_version
 
     return request_line_result
