@@ -53,7 +53,7 @@ class HttpRequest:
     """A basic HTTP request."""
 
     # The encoding used in GET/POST dicts. None means use default setting.
-    _encoding = None
+    _encoding = settings.DEFAULT_CHARSET
     _upload_handlers = []
 
     def __init__(self, request_stream):

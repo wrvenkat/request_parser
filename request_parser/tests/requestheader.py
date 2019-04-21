@@ -19,6 +19,7 @@ def requestparser():
             print "Protocol info: "+http_get_request1.protocol_info
             print "Host is: "+http_get_request1.get_host()
             print "Port is: "+http_get_request1.get_port()
+            print "Encoding is: "+http_get_request1._encoding
             print "Content-Type is: "+http_get_request1.content_type
             print "Request URI is: "+http_get_request1.get_raw_uri()
             print "GET query string dict is: "
@@ -27,6 +28,8 @@ def requestparser():
             print http_get_request1.COOKIES
             print "Request headers are: "
             print http_get_request1.META['REQUEST_HEADERS']
+            print "Request is: "
+            print http_get_request1
             
         except Exception as e:
             print "Exception is: {}".format(e)
