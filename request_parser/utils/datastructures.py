@@ -131,8 +131,7 @@ class MultiValueDict(dict):
     def setlist(self, key, potential_list):
         """
         sets a list for a key.
-        Converts a single value to a list item.
-        TODO: Is this even required? Not sure. Let it be as is for now.
+        Converts a single value to a list item.        
         """
         list_ = ''
         if potential_list is None:
@@ -312,7 +311,6 @@ class ImmutableMultiValueDict(MultiValueDict):
         """
         sets a list for a key.
         Converts a single value to a list item.
-        TODO: Is this even required? Not sure. Let it be as is for now.
         """
         self._assert_mutable()
         super(ImmutableMultiValueDict, self).setlist(key, potential_list)

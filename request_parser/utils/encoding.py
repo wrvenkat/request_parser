@@ -83,9 +83,10 @@ def iri_to_uri(iri):
     # converted.
     if iri is None:
         return iri
-    #TODO: The following 2 lines might come to bite back - have to pay some attentions
+    #WARNING: The following 2 lines might come to bite back - have to pay some attentions
     #elif isinstance(iri, Promise):
-    #    iri = str(iri)
+    else:
+        iri = str(iri)
     return quote(iri, safe="/#%[]=:;$&()+,!?*@'~")
 
 def escape_uri_path(path):

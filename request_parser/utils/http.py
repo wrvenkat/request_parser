@@ -420,12 +420,12 @@ def limited_parse_qsl(qs, keep_blank_values=False, encoding='utf-8',
                 continue
         if nv[1] or keep_blank_values:
             name = nv[0].replace('+', ' ')
-            #TODO: need to convert 'name' with 'encoding' to UTF-8 before asking urllib.unquote to unquote?
-            #name = unquote(name, encoding=encoding, errors=errors)
-            name = unquote(name)
+            #FIXED: need to convert 'name' with 'encoding' to UTF-8 before asking urllib.unquote to unquote?
+            name = unquote(name, encoding=encoding, errors=errors)
+            #name = unquote(name)
             value = nv[1].replace('+', ' ')
-            #value = unquote(value, encoding=encoding, errors=errors)
-            value = unquote(value)
+            value = unquote(value, encoding=encoding, errors=errors)
+            #value = unquote(value)
             r.append((name, value))
     return r
 
