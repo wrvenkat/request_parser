@@ -1,4 +1,5 @@
 from request_parser.http.request import HttpRequest
+from request_parser.http.constants import MetaDict
 import testutils
 
 def requestparser():
@@ -25,7 +26,7 @@ def requestparser():
             print "GET query string dict is: "
             print http_get_request1.GET
             print "Cookies are: "
-            print http_get_request1.COOKIES
+            print http_get_request1.META[MetaDict.Info.REQ_HEADERS].getlist("Cookies")
             print "Request headers are: "
             print http_get_request1.META['REQUEST_HEADERS']
             print "Request is: "
