@@ -82,6 +82,18 @@ class HttpRequest:
         if self.method is None or not self.get_full_path():
             return '<%s>' % self.__class__.__name__
         return '<%s: %s %r>' % (self.__class__.__name__, self.method, self.get_full_path())
+    
+    def get_method(self):
+        return self.method
+
+    def get_scheme(self):
+        return self.scheme
+
+    def get_host(self):
+        return self.host
+    
+    def get_port(self):
+        return str(self.port)
 
     def get_full_path(self, force_append_slash=False):
         return self._get_full_path(self.path, force_append_slash)
@@ -109,12 +121,15 @@ class HttpRequest:
         """
         return '{scheme}://{host}{path}'.format(
             scheme=self.scheme,
-            host=self.get_host(),
+            host=self.host,
             path=self.get_full_path(),
         )
 
+    def get_protocol_info(self):
+        return self.scheme
+
     def _current_scheme_host(self):
-        return '{}://{}'.format(self.scheme, self.get_host())
+        return '{}://{}'.format(self.scheme, self.host)
 
     def is_secure(self):
         return self.scheme == 'https'
@@ -634,9 +649,7 @@ def parse_request_line(request_line=''):
     Parse the request line in an HTTP/HTTP Proxy request and return a dictionary with 8 entries:
     <METHOD> <SCHEME>://<DOMAIN>/<PATH>;<PARAMS>?<QUERY_STRING>#<FRAGMENT> <PROTOCOL_INFO>
     """
-
-    method, uri, protocol_version = ''
-    _splits = request_line.split(' ',3)
+    _splits = request_line.split(' ')
 
     if len(_splits) > 3:
         raise InvalidHttpRequest("Invalid request line.", 400)
