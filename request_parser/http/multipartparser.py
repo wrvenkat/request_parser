@@ -11,7 +11,7 @@ import cgi
 from six import reraise as raise_from
 from future.backports.urllib.parse import unquote
 
-import request_parser.conf.settings as settings
+from request_parser.conf.settings import Settings as settings
 from request_parser.exceptions.exceptions import (
     RequestDataTooBig, TooManyFieldsSent, InputStreamExhausted
 )
