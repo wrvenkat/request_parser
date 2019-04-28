@@ -7,7 +7,7 @@ from itertools import chain
 from urllib import quote, urlencode
     #urljoin, urlsplit
 
-import request_parser.conf.settings as settings
+from request_parser.conf.settings import Settings as settings
 from request_parser.exceptions.exceptions import (
     ImproperlyConfigured, RequestDataTooBig,
 )
@@ -58,7 +58,7 @@ class HttpRequest:
     _upload_handlers = []
 
     def __init__(self, request_stream):
-        self.request_stream = request_stream
+        self._stream = request_stream
 
         self.GET = QueryDict(mutable=True)
         self.POST = QueryDict(mutable=True)
@@ -226,7 +226,9 @@ class HttpRequest:
         Parse the request headers and populate the META dictionary.
         """
         #create a LazyStream out of the request_stream
-        request_header_stream = LazyStream(self.request_stream)
+        if not self._stream:
+            self._stream = BytesIO()
+        request_header_stream = LazyStream(self._stream)
         request_header = ''
 
         #read until we find a '\r\n\r\n' sequence
@@ -308,8 +310,7 @@ class HttpRequest:
             #if the request is not POST, then we just set the _post and _files to empty
             #QueryDict and MultiValueDict respectively
             #Note that this means that a GET with a body is not parsed
-            self._post, self._files = QueryDict(encoding=self._encoding), MultiValueDict()
-            return
+            self._post = QueryDict(encoding=self._encoding)
         
         #TODO: Parse the body if the request method is not a POST and GET
         #if self.method != 'GET' and self.method == 'PUT'
@@ -327,7 +328,8 @@ class HttpRequest:
                 data = BytesIO(self._body)
             else:
                 #QUESTION: What does this do?
-                data = self
+                #data = self
+                data = BytesIO(self.body)
             
             try:
                 #returns POST QueryDict and MultiValueDict for _files
