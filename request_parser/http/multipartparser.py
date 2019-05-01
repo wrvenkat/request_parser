@@ -54,7 +54,7 @@ class MultiPartParser:
             The encoding with which to treat the incoming data.
         """
         # Content-Type should contain multipart and the boundary information.
-        content_type = META.get('CONTENT_TYPE', '')
+        content_type = META.get('Content-Type', '')
         if not content_type.startswith('multipart/'):
             raise MultiPartParserError('Invalid Content-Type: %s' % content_type)
 
@@ -67,7 +67,7 @@ class MultiPartParser:
         # Content-Length should contain the length of the body we are about
         # to receive.
         try:
-            content_length = int(META.get('CONTENT_LENGTH', 0))
+            content_length = int(META.get('Content-Length', 0))
         except (ValueError, TypeError):
             content_length = 0
 
@@ -200,6 +200,7 @@ class MultiPartParser:
                             num_bytes_read > settings.DATA_UPLOAD_MAX_MEMORY_SIZE):
                         raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
 
+                    force_text(data, encoding, errors='replace')
                     self._post.appendlist(field_name, force_text(data, encoding, errors='replace'))
                 elif item_type == FILE:
                     # This is a file, use the handler...
