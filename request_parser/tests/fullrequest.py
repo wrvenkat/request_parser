@@ -13,7 +13,8 @@ def requestparser():
     with open(put_multipart_request, 'r') as stream:
         try:
             http_get_request1 = HttpRequest(stream)
-            http_get_request1.parse()
+            #http_get_request1.parse_request_header()
+            body = http_get_request1.parse()
             print "Method: "+http_get_request1.method
             print "Scheme is: "+http_get_request1.scheme
             print "Path is: "+http_get_request1.path
@@ -31,6 +32,7 @@ def requestparser():
             print http_get_request1.META['REQUEST_HEADERS']
             print "Request is: "
             print http_get_request1
+            #print "Body is: "+body
             
         except Exception as e:
             print "Exception is: {}".format(e)

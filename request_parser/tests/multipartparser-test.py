@@ -17,8 +17,8 @@ def test1():
                                  for handler in settings_upload_handlers]
 
     META = {
-        'CONTENT_LENGTH' : 554,
-        'CONTENT_TYPE' : 'multipart/form-data; boundary=-------------------------9051914041544843365972754266'
+        'Content-Length' : 554,
+        'Content-Type' : 'multipart/form-data; boundary=-------------------------9051914041544843365972754266'
     }
 
     #for relative path
