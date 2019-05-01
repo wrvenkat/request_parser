@@ -32,9 +32,25 @@ def requestparser():
             print http_get_request1.META['REQUEST_HEADERS']
             print "Request is: "
             print http_get_request1
+            files = http_get_request1.FILES
+            print_files_details(files)
             #print "Body is: "+body
             
         except Exception as e:
             print "Exception is: {}".format(e)
 
+def print_files_details(files):
+    """
+    Prints details of files in the MultiValueDict files.
+    """
+    for name, _files in files.lists():
+        for _file in _files:
+            print "Filename is: "+name
+            print "Uploaded name is: "+_file.name
+            print "Uploaded file size: "+str(_file.size)
+            print "File content-type: "+_file.content_type
+            _file = _file.open()
+            chunk = _file.read(100)
+            print "First hundred bytes of file: "+str(chunk)
+    
 requestparser()
