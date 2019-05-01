@@ -12,7 +12,7 @@ from request_parser.exceptions.exceptions import (
     ImproperlyConfigured, RequestDataTooBig,
 )
 from request_parser.files import uploadhandler
-from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError
+from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError, parse_header
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict, ImmutableMultiValueDict
 from request_parser.utils.encoding import escape_uri_path, iri_to_uri
 from request_parser.utils.http import is_same_domain, limited_parse_qsl
@@ -59,6 +59,14 @@ class HttpRequest:
 
     def __init__(self, request_stream):
         self._stream = request_stream
+        self.request_stream = None
+
+        #read status flags
+        self._read_started = False
+
+        #Parsing status flags
+        self._parsing_started = False
+        self._body_parsing_started = False
 
         self.GET = QueryDict(mutable=True)
         self.POST = QueryDict(mutable=True)
@@ -77,6 +85,8 @@ class HttpRequest:
         self.protocol_info = ''
         self.content_type = None
         self.content_params = None
+        
+        self.parse_request_header()
 
     def __repr__(self):
         if self.method is None or not self.get_full_path():
@@ -185,22 +195,19 @@ class HttpRequest:
         Accepts a stream that represents the request_stream
         """
         self.parse_request_header()
-        self._load_post_and_files()
+        self.parse_request_body()
 
     def _parse_file_upload(self, META, post_data):
         """Return a tuple of (POST QueryDict, FILES MultiValueDict)."""
         parser = MultiPartParser(META, post_data, self.upload_handlers, self.encoding)
+        self._body_parsing_started = True
         return parser.parse()
-
-    @property
+    
     def body(self):
         """
-        Return raw body as a byte stream.
+        Return body as a raw byte stream.
         """
-        if not hasattr(self, '_body'):
-            if self._read_started:
-                raise RawPostDataException("You cannot access body after reading from request's data stream")
-
+        if self._parsing_started and not self._body_parsing_started and not hasattr(self, '_body'):
             # Limit the maximum request data size that will be handled in-memory.
             #TODO: Figure out a way to do BufferedReading when in-memory body parsing is not possible
             #QUESTION: How/where is this used - is the self.read() used based on this?
@@ -209,24 +216,28 @@ class HttpRequest:
                 raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
 
             try:
-                #At this point, remember that, self.read() expects self._stream to be set to an appropriate
-                #source of bytes by a corresponding request subclass (e.g. WSGIRequest).
-                self._body = self.read()
+                #At this point, remember that, self.request_stream points to the start of the body
+                self._body = self.request_stream.read()
             except IOError as e:
                 raise_(UnreadablePostError(*e.args), e)
                 #raise UnreadablePostError(*e.args) from e
-            
-            #set/change the _stream to _body so that
-            #when self.read() is called, it points to _body as a stream
-            self._stream = BytesIO(self._body)
+        elif self._body_parsing_started:
+            raise RawPostDataException("You cannot access body after reading from request's data stream")
+        elif not self._parsing_started:
+            self.parse_request_header()
+            return self.body()
         return self._body
 
     def parse_request_header(self):
         """
         Parse the request headers and populate the META dictionary.
         """
-        #create a LazyStream out of the request_stream
-        if not self._stream:
+        #if parsing has already started, then simply return
+        if self._parsing_started:
+            return
+
+        #create a LazyStream out of the _stream
+        if self._stream is None:
             self._stream = BytesIO()
         request_header_stream = LazyStream(self._stream)
         request_header = ''
@@ -235,6 +246,7 @@ class HttpRequest:
         request_header_end = -1
         while request_header_end == -1:
             chunk = request_header_stream.read(settings.MAX_HEADER_SIZE)
+            self._parsing_started = True
             if not chunk:
                 break
             request_header_end = chunk.find(b'\r\n\r\n')
@@ -292,48 +304,50 @@ class HttpRequest:
 
         self.method = meta_dict[MetaDict.ReqLine.METHOD]
         self.path = meta_dict[MetaDict.ReqLine.PATH]
-        self.protocol_info = meta_dict[MetaDict.ReqLine.PROTO_INFO]
-        self.content_type = request_headers.get('Content-Type')
-        del request_headers['Content-Type']
+        self.protocol_info = meta_dict[MetaDict.ReqLine.PROTO_INFO]        
+        self.content_type = parse_header(request_headers.get('Content-Type'))[0]        
         self.META[MetaDict.Info.QUERY_STRING] = meta_dict[MetaDict.ReqLine.QUERY_STRING]
         self.GET = QueryDict(self.META[MetaDict.ReqLine.QUERY_STRING]) if self.META[MetaDict.ReqLine.QUERY_STRING] else QueryDict(mutable=True)
         #Add a immutable version of request_headers dictionary into META dictionary
         self.META[MetaDict.Info.REQ_HEADERS] = ImmutableMultiValueDict(request_headers)
 
+        #complete the call by assigning the start of body to the request body start
+        self.request_stream = request_header_stream
+
     def _mark_post_parse_error(self):
         self._post = QueryDict()
         self._files = MultiValueDict()
 
-    def _load_post_and_files(self):
-        """Populate self._post and self._files if the content-type is a form type"""
-        if self.method != 'POST':
-            #if the request is not POST, then we just set the _post and _files to empty
-            #QueryDict and MultiValueDict respectively
-            #Note that this means that a GET with a body is not parsed
-            self._post = QueryDict(encoding=self._encoding)
-        
-        #TODO: Parse the body if the request method is not a POST and GET
-        #if self.method != 'GET' and self.method == 'PUT'
+    def parse_request_body(self):
+        """
+        Parse request body according to the content-type if there's a body.        
+        """
 
-        #if the read has started and we still don't have a _body attribute, then
-        #it means smoething has gone wrong in the parsing of POST body
-        if self._read_started and not hasattr(self, '_body'):
+        #sanity check for a duplicate call
+        if self._body_parsing_started:
+            return
+
+        #if header not parsed already
+        #if parse_request_body is called, then it means
+        #that we're retaining the request header data but
+        #reparsing only the body
+        if not self._parsing_started:
             self._mark_post_parse_error()
             return
 
-        if self.content_type == 'multipart/form-data':
-            if hasattr(self, '_body'):
-                # Use already read data
-                #create a new stream out of _body
-                data = BytesIO(self._body)
-            else:
-                #QUESTION: What does this do?
-                #data = self
-                data = BytesIO(self.body)
-            
+        body_stream = self.request_stream
+        data = body_stream.read(1)
+
+        #check if the body is empty
+        if not data:
+            self._post, self._files = QueryDict(encoding=self._encoding), MultiValueDict()
+            return
+        body_stream.unget(data)
+
+        if self.content_type == 'multipart/form-data':      
             try:
                 #returns POST QueryDict and MultiValueDict for _files
-                self._post, self._files = self._parse_file_upload(self.META, data)
+                self._post, self._files = self._parse_file_upload(self.META.get(MetaDict.Info.REQ_HEADERS), body_stream)
             except MultiPartParserError:
                 # An error occurred while parsing POST data. Since when
                 # formatting the error the request handler might access
@@ -344,10 +358,14 @@ class HttpRequest:
         elif self.content_type == 'application/x-www-form-urlencoded':
             #if the content-type is of form-urlencoded, then all we need to do is to parse the body
             #as a key-value pair. This gives our _post and an empty _files of MultiValueDict
-            self._post, self._files = QueryDict(self.body, encoding=self._encoding), MultiValueDict()
+            self._post, self._files = QueryDict(self.body(), encoding=self._encoding), MultiValueDict()
         #for any other CONTENT_TYPE, an empty QueryDict for _post and empty MultiValueDict for _files
         else:
             self._post, self._files = QueryDict(encoding=self._encoding), MultiValueDict()
+        
+        self.POST = self._post
+        self.FILES = self._files                
+        return
 
     def close(self):
         if hasattr(self, '_files'):
@@ -567,7 +585,8 @@ def bytes_to_text(s, encoding):
     Return any non-bytes objects without change.
     """
     if isinstance(s, bytes):
-        return str(s, encoding, 'replace')
+        #return str(s, encoding, 'replace')
+        return str(s).encode(encoding=encoding, errors='replace')
     else:
         return s
 
