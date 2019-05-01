@@ -4,7 +4,7 @@ Base file upload handler classes, and the built-in concrete subclasses
 
 from io import BytesIO
 
-from request_parser.conf import settings
+from request_parser.conf.settings import Settings as settings
 from request_parser.files.uploadedfile import (
     InMemoryUploadedFile, TemporaryUploadedFile,
 )

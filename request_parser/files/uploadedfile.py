@@ -5,7 +5,7 @@ Classes representing uploaded files.
 import os
 from io import BytesIO
 
-from request_parser.conf import settings
+from request_parser.conf.settings import Settings as settings
 from request_parser.files import temp as tempfile
 from request_parser.files.base import File
 
