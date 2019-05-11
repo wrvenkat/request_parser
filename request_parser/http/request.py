@@ -57,7 +57,7 @@ class HttpRequest:
     _encoding = settings.DEFAULT_CHARSET
     _upload_handlers = []
 
-    def __init__(self, request_stream):
+    def __init__(self, request_stream=None):
         self._stream = request_stream
         self.request_stream = None
 
@@ -77,16 +77,17 @@ class HttpRequest:
         #that are essential for quick info gathering
         #and those that should be easily changed
         self.method = None
-        self.scheme = ''
-        self.host = ''
-        self.port = ''
-        self.path = ''
-        self.path_info = ''
-        self.protocol_info = ''
+        self.scheme = None
+        self.host = None
+        self.port = None
+        self.path = None
+        self.path_info = None
+        self.protocol_info = None
         self.content_type = None
         self.content_params = None
         
-        self.parse_request_header()
+        if self.request_stream:
+            self.parse_request_header()
 
     def __repr__(self):
         if self.method is None or not self.get_full_path():
