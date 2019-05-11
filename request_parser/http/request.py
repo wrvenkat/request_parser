@@ -94,6 +94,12 @@ class HttpRequest:
             return '<%s>' % self.__class__.__name__
         return '<%s: %s %r>' % (self.__class__.__name__, self.method, self.get_full_path())
     
+    def get_path(self):
+        if self.path:
+            return str(self.path).encode('ascii', errors='replace')
+        else:
+            return ''
+
     def get_method(self):
         return self.method
 
@@ -107,7 +113,7 @@ class HttpRequest:
         return str(self.port)
 
     def get_full_path(self, force_append_slash=False):
-        return self._get_full_path(self.path, force_append_slash)
+        return self._get_full_path(self.get_path(), force_append_slash).encode('ascii', errors='replace')
 
     #QUESTION: What is this used for?
     def get_full_path_info(self, force_append_slash=False):
@@ -121,7 +127,7 @@ class HttpRequest:
         # Rather than crash if this doesn't happen, we encode defensively.
         return '%s%s%s' % (
             #add a '/' if force_append_slash is true and the path doesn't end with '/'
-            escape_uri_path(path),            
+            escape_uri_path(path),
             '/' if force_append_slash and not path.endswith('/') else '',
             ('?' + iri_to_uri(self.META.get(MetaDict.ReqLine.QUERY_STRING, ''))) if self.META.get(MetaDict.ReqLine.QUERY_STRING, '') else ''
         )
