@@ -277,7 +277,8 @@ class MultiPartParser:
                     # If this is neither a FIELD or a FILE, just exhaust the stream.
                     exhaust(stream)
         #QUESTION: When does this occur?
-        #ANSWER: This is raised when the handling of a file upload in a multipart
+        #ANSWER: This is used when one of the file handler on line 257 signals to
+        #stop any more further file handline. This means any further file upload
         #request needs to be abruptly stopped.
         #See django's tests/file_uploads/uploadhandler.py for more details.
         #TODO: Repurpose this so that we can stop file upload parsing whenver needed.
