@@ -1,5 +1,6 @@
 from request_parser.http.request import HttpRequest
 from request_parser.http.constants import MetaDict
+import base64
 import testutils
 
 def requestparser():
@@ -51,6 +52,7 @@ def print_files_details(files):
             print "File content-type: "+_file.content_type
             _file = _file.open()
             chunk = _file.read(100)
-            print "First hundred bytes of file: "+str(chunk)
+            output = base64.b64encode(chunk)
+            print "First hundred bytes of file Base64 encoded: "+str(output)
     
 requestparser()
