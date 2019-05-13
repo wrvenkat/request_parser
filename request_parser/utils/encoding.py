@@ -6,7 +6,7 @@ import locale
 import warnings
 from decimal import Decimal
 
-from future.backports.urllib.parse import quote
+from future.backports.urllib.parse import quote, unquote
 
 class DjangoUnicodeDecodeError(UnicodeDecodeError):
     def __init__(self, obj, *args):
@@ -89,7 +89,18 @@ def iri_to_uri(iri):
         iri = str(iri)
     return quote(iri, safe="/#%[]=:;$&()+,!?*@'~")
 
-def escape_uri_path(path):
+def uri_to_iri(uri):
+    """
+    Does the opposite of iri_to_uri()
+    """
+    if not uri:
+        return uri
+    
+    #encode the provided bytes/string to UTF-8
+    #uri = str(uri).encode('utf-8')
+    return unquote(uri).encode('utf-8')
+
+def escape_uri_path(path, encode_percent=True):
     """
     Escape the unsafe characters from the path portion of a Uniform Resource
     Identifier (URI).
@@ -103,4 +114,7 @@ def escape_uri_path(path):
     # and "?" according to section 3.3 of RFC 2396.
     # The reason for not subtracting and escaping "/" is that we are escaping
     # the entire path, not a path segment.
-    return quote(path, safe="/:@&+$,-_.!~*'()")
+    if encode_percent:
+        return quote(path, safe="/:@&+$,-_.!~*'()")
+    else:
+        return quote(path, safe="/:@&+$,-_.!~*'()%")
