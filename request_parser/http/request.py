@@ -14,7 +14,7 @@ from request_parser.exceptions.exceptions import (
 from request_parser.files import uploadhandler
 from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError, parse_header
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict, ImmutableMultiValueDict
-from request_parser.utils.encoding import escape_uri_path, iri_to_uri
+from request_parser.utils.encoding import escape_uri_path, iri_to_uri, uri_to_iri
 from request_parser.utils.http import is_same_domain, limited_parse_qsl
 from request_parser.http.multipartparser import LazyStream
 from request_parser.utils.http import _urlparse as urlparse
@@ -80,13 +80,12 @@ class HttpRequest:
         self.scheme = None
         self.host = None
         self.port = None
-        self.path = None
-        self.path_info = None
+        self.path = None        
         self.protocol_info = None
         self.content_type = None
         self.content_params = None
         
-        if self.request_stream:
+        if self._stream:
             self.parse_request_header()
 
     def __repr__(self):
@@ -96,7 +95,7 @@ class HttpRequest:
     
     def get_path(self):
         if self.path:
-            return str(self.path).encode('ascii', errors='replace')
+            return self.path
         else:
             return ''
 
@@ -112,12 +111,12 @@ class HttpRequest:
     def get_port(self):
         return str(self.port)
 
-    def get_full_path(self, force_append_slash=False):
-        return self._get_full_path(self.get_path(), force_append_slash).encode('ascii', errors='replace')
-
-    #QUESTION: What is this used for?
-    def get_full_path_info(self, force_append_slash=False):
-        return self._get_full_path(self.path_info, force_append_slash)
+    def get_full_path(self, force_append_slash=False, raw=False):
+        if raw:
+            _path = self._get_full_path(self.get_path(), force_append_slash)
+            return uri_to_iri(_path)            
+        else:
+            return self._get_full_path(self.get_path(), force_append_slash).encode('ascii', errors='replace')
 
     def _get_full_path(self, path, force_append_slash):
         """
@@ -127,23 +126,24 @@ class HttpRequest:
         # Rather than crash if this doesn't happen, we encode defensively.
         return '%s%s%s' % (
             #add a '/' if force_append_slash is true and the path doesn't end with '/'
-            escape_uri_path(path),
+            #also, since anything in self.path is assumed to be safe and final, we don't perform any further encoding
+            escape_uri_path(path, encode_percent=False),
             '/' if force_append_slash and not path.endswith('/') else '',
             ('?' + iri_to_uri(self.META.get(MetaDict.ReqLine.QUERY_STRING, ''))) if self.META.get(MetaDict.ReqLine.QUERY_STRING, '') else ''
         )
 
-    def get_raw_uri(self):
+    def get_uri(self, raw=False):
         """
-        Return an absolute URI from variables available in this request.
+        Return a safe, absolute URI if raw is false from meta data available in this request. Return the raw URI otherwise
         """
         return '{scheme}://{host}{path}'.format(
             scheme=self.scheme,
             host=self.host,
-            path=self.get_full_path(),
+            path = self.get_full_path(raw=True) if raw else self.get_full_path(),
         )
 
     def get_protocol_info(self):
-        return self.scheme
+        return self.protocol_info
 
     def _current_scheme_host(self):
         return '{}://{}'.format(self.scheme, self.host)
@@ -173,6 +173,16 @@ class HttpRequest:
             del self.GET
         if hasattr(self, '_post'):
             del self._post
+    
+    def set_path(self, path, encode_safely=True):
+        """
+        Set a path where path is a UNICODE string.
+        Before setting to self.path, it is safely encoded.
+        encode_safely - Flag that percent encodes the path if there are UTF-8 characters.
+        """        
+        if encode_safely:
+            path = iri_to_uri(path.encode('utf8'))
+        self.path = path
 
     def _initialize_handlers(self):
         """

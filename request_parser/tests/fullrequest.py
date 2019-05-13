@@ -24,7 +24,7 @@ def requestparser():
             print "Port is: "+http_get_request1.get_port()
             print "Encoding is: "+http_get_request1._encoding
             print "Content-Type is: "+http_get_request1.content_type
-            print "Request URI is: "+http_get_request1.get_raw_uri()
+            print "Request URI is: "+http_get_request1.get_uri()
             print "GET query string dict is: "
             print http_get_request1.GET
             print "Cookies are: "

@@ -1,4 +1,4 @@
-PUT /upload HTTP/1.1
+PUT /caf%C3%A9/upload HTTP/1.1
 Host: www.knowhere123.com
 Accept: image/gif, image/jpeg, */*
 Accept-Language: en-us
