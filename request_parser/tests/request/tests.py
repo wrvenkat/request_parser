@@ -12,7 +12,7 @@ from request_parser.http.constants import MetaDict
 
 from request_parser.utils.encoding import iri_to_uri, uri_to_iri
 
-class HttpRequestBasicTests(unittest.TestCase):    
+class HttpRequestBasicTests(unittest.TestCase):
 
     def test_empty_request_stream(self):
         """
@@ -76,6 +76,9 @@ class HttpRequestBasicTests(unittest.TestCase):
         self.assertEqual(repr(request), "<HttpRequest>")
 
 class RequestHeaderTests(unittest.TestCase):
+    """
+    HttpRequest META data check.
+    """
     @classmethod
     def setUpClass(cls):
         test_files_dir = "request parse test files"
