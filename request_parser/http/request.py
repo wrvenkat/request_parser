@@ -181,7 +181,7 @@ class HttpRequest:
         encode_safely - Flag that percent encodes the path if there are UTF-8 characters.
         """        
         if encode_safely:
-            path = iri_to_uri(path.encode('utf8'))
+            path = escape_uri_path(iri_to_uri(path))
         self.path = path
 
     def _initialize_handlers(self):
