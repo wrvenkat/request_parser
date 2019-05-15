@@ -83,7 +83,7 @@ def iri_to_uri(iri):
     # converted.
     if iri is None:
         return iri
-    #WARNING: The following 2 lines might come to bite back - have to pay some attentions
+    #WARNING: The following 2 line might come to bite back - have to pay some attentions
     #elif isinstance(iri, Promise):
     else:
         iri = str(iri)
@@ -98,6 +98,9 @@ def uri_to_iri(uri):
     
     #encode the provided bytes/string to UTF-8
     #uri = str(uri).encode('utf-8')
+
+    # unquote(uri) decodes to UNICODE code point, SEE: https://en.wikipedia.org/wiki/List_of_Unicode_characters
+    # We then re-encode the UNICODE to UTF-8 for Python use.
     return unquote(uri).encode('utf-8')
 
 def escape_uri_path(path, encode_percent=True):

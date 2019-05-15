@@ -129,9 +129,9 @@ class RequestHeaderTests(unittest.TestCase):
         request_stream = open(self.request_file, 'r')
         http_request = HttpRequest(request_stream)
 
-        #URL encoded UNICODE        
+        #URL encoded UTF-8        
         self.assertEqual("UNKNOWN://www.knowhere123.com/caf%C3%A9/upload", http_request.get_uri())
-        #get RAW URI
+        #get RAW URI        
         self.assertEqual("UNKNOWN://www.knowhere123.com/café/upload", http_request.get_uri(raw=True))
         self.assertFalse(http_request.is_ajax())
         self.assertFalse(http_request.is_secure())
