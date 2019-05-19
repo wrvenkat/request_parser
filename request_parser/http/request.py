@@ -323,8 +323,14 @@ class HttpRequest:
 
         self.method = meta_dict[MetaDict.ReqLine.METHOD]
         self.path = meta_dict[MetaDict.ReqLine.PATH]
-        self.protocol_info = meta_dict[MetaDict.ReqLine.PROTO_INFO]        
-        self.content_type = parse_header(request_headers.get('Content-Type'))[0]        
+        self.protocol_info = meta_dict[MetaDict.ReqLine.PROTO_INFO]
+        #correctly set the encoding and the content-type
+        self.content_type, header_dict = parse_header(request_headers.get('Content-Type'))
+        for key, value in header_dict.items():
+            if 'charset' == key.lower():
+                self.encoding = value
+                break
+
         self.META[MetaDict.Info.QUERY_STRING] = meta_dict[MetaDict.ReqLine.QUERY_STRING]
         self.GET = QueryDict(self.META[MetaDict.ReqLine.QUERY_STRING]) if self.META[MetaDict.ReqLine.QUERY_STRING] else QueryDict(mutable=True)
         #Add a immutable version of request_headers dictionary into META dictionary
