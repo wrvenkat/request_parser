@@ -13,7 +13,8 @@ class Settings:
     #Default max size of uploaded file is 80MB
     FILE_UPLOAD_MAX_MEMORY_SIZE = 80 * ((2 ** 10) * (2 ** 10))
 
-    DEFAULT_CHARSET = 'utf-8'
+    #Default charset per HTTP 1.1 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
+    DEFAULT_CHARSET = 'ISO-8859-1'
 
     DATA_UPLOAD_MAX_NUMBER_FIELDS = 4096
 
