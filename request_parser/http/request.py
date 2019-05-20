@@ -167,7 +167,9 @@ class HttpRequest:
         dictionary has already been created, remove and recreate it on the
         next access (so that it is decoded correctly).
         """
-        #QUESTION: Need to check when the GET/POST dictonary is redone
+        #DONE: Need to check when the GET/POST dictonary is redone?
+        #ANSWER: They're redone whenever parse_request_header and parse_request_body
+        #are called
         self._encoding = val
         if hasattr(self, 'GET'):
             del self.GET
@@ -218,15 +220,14 @@ class HttpRequest:
 
     def _parse_file_upload(self, META, post_data):
         """Return a tuple of (POST QueryDict, FILES MultiValueDict)."""
-        parser = MultiPartParser(META, post_data, self.upload_handlers, self.encoding)
-        self._body_parsing_started = True
+        parser = MultiPartParser(META, post_data, self.upload_handlers, self.encoding)        
         return parser.parse()
     
     def body(self):
         """
         Return body as a raw byte stream.
         """
-        if self._parsing_started and not self._body_parsing_started and not hasattr(self, '_body'):
+        if self._parsing_started and not hasattr(self, '_body'):
             # Limit the maximum request data size that will be handled in-memory.
             #TODO: Figure out a way to do BufferedReading when in-memory body parsing is not possible
             #QUESTION: How/where is this used - is the self.read() used based on this?
@@ -240,8 +241,8 @@ class HttpRequest:
             except IOError as e:
                 raise_(UnreadablePostError(*e.args), e)
                 #raise UnreadablePostError(*e.args) from e
-        elif self._body_parsing_started:
-            raise RawPostDataException("You cannot access body after reading from request's data stream")
+        #elif self._body_parsing_started:
+            #raise RawPostDataException("You cannot access body after reading from request's data stream")
         elif not self._parsing_started:
             self.parse_request_header()
             return self.body()
@@ -369,6 +370,8 @@ class HttpRequest:
             return
         body_stream.unget(data)
 
+        self._body_parsing_started = True
+        
         if self.content_type == 'multipart/form-data':      
             try:
                 #returns POST QueryDict and MultiValueDict for _files
@@ -387,6 +390,12 @@ class HttpRequest:
         #for any other CONTENT_TYPE, an empty QueryDict for _post and empty MultiValueDict for _files
         else:
             self._post, self._files = QueryDict(encoding=self._encoding), MultiValueDict()
+        
+        #restart content-type check
+        if self.content_type == 'text/plain' or self.content_type == 'text/html'\
+            or self.content_type == 'application/json':
+            _body = self.body()
+            self._body = self._body.decode(self.encoding)
         
         self.POST = self._post
         self.FILES = self._files                
