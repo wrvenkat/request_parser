@@ -5,7 +5,7 @@ import unittest
 from future.backports.urllib.parse import urlencode, quote
 
 from request_parser.http.request import HttpRequest, RawPostDataException, UnreadablePostError
-from request_parser.http.multipartparser import MultiPartParserError
+from request_parser.http.multipartparser import MultiPartParserError, LazyStream
 from request_parser.http.request import split_domain_port
 from request_parser.tests import testutils
 from request_parser.http.constants import MetaDict
@@ -131,9 +131,102 @@ class RequestHeaderTests(unittest.TestCase):
 
         #URL encoded UTF-8        
         self.assertEqual("UNKNOWN://www.knowhere123.com/caf%C3%A9/upload", http_request.get_uri())
-        #get RAW URI        
+        #get RAW URI
+        #café here is UTF-8 encoded, so when get_uri(raw=True) returns,
+        #the representation of the returned value should be same as the UTF-8
+        #representation of café
         self.assertEqual("UNKNOWN://www.knowhere123.com/café/upload", http_request.get_uri(raw=True))
         self.assertFalse(http_request.is_ajax())
         self.assertFalse(http_request.is_secure())
+    
+    def test_http_request_path_metadata_reset(self):
+        """
+        Test (re)set of meta data post request header processing.
+        """
+        request_stream = open(self.request_file, 'r')
+        http_request = HttpRequest(request_stream)
+
+        #URI/path string (excluding querys tring) set/reset test
+        self.assertEqual("UNKNOWN://www.knowhere123.com/caf%C3%A9/upload", http_request.get_uri())
+        new_international_path = "/سلام/this%/is$*()$!@/a/new/path/Name/Müeller"
+        http_request.set_path(new_international_path)
+        self.assertEqual("UNKNOWN://www.knowhere123.com/%D8%B3%D9%84%D8%A7%D9%85/this%/is$*()$!@/a/new/path/Name/M%C3%BCeller", http_request.get_uri())
+        self.assertEqual("UNKNOWN://www.knowhere123.com/سلام/this%/is$*()$!@/a/new/path/Name/Müeller", http_request.get_uri(raw=True))
+        #print http_request.get_uri()
+    
+    def test_http_request_encoding_metadata_reset(self):
+        #charset/encoding reset test
+        encoded_body_dir = "request parse test files/encoded body"
+        encoded_body_dir = testutils.get_abs_path(encoded_body_dir)
+
+        iso_88591_1_file = "ISO-8859-1-Barca.txt"
+        utf8_file = "UTF8-Barca.txt"
+        utf16_BEBOM_file = "UTF16 BEBOM-Barca.txt"
+
+        iso_88591_1_file = encoded_body_dir + iso_88591_1_file
+        utf8_file = encoded_body_dir + utf8_file
+        utf16_BEBOM_file = encoded_body_dir + utf16_BEBOM_file
+
+        iso_88591_1_encoding = "ISO-8859-1"
+        utf8_encoding = "UTF-8"
+        utf16_BEBOM_encoding = "UTF-16"
+
+        #an http_request
+        request_stream = open(self.request_file, 'r')
+        http_request = HttpRequest(request_stream)
+
+        #ISO-88591-1
+        #reset content-type and encoding
+        iso_88591_1_body = open(iso_88591_1_file, 'r')
+        http_request.content_type = "text/plain"
+        http_request.encoding = iso_88591_1_encoding.lower()
+        #set the request_body stream
+        http_request.request_stream = LazyStream(iso_88591_1_body)
+        http_request._body_parsing_started = False
+        http_request.parse_request_body()
+
+        #check if the request body was properly decoded as ISO-8859-1
+        _body_file = open(iso_88591_1_file, 'r')
+        _body_bytes = _body_file.read()
+        _body_bytes = _body_bytes.decode(iso_88591_1_encoding.lower())
+        http_body = http_request.body()
+        #the body should be in the encoding specified in the request
+        self.assertEqual(_body_bytes, http_body)
+
+        #UTF-16
+        #reset content-type and encoding
+        utf16_BEBOM_body = open(utf16_BEBOM_file, 'r')
+        http_request.content_type = "text/plain"
+        http_request.encoding = utf16_BEBOM_encoding.lower()
+        #set the request_body stream
+        http_request.request_stream = LazyStream(utf16_BEBOM_body)
+        http_request._body_parsing_started = False
+        http_request.parse_request_body()
+
+        #check if the request body was properly decoded as ISO-8859-1
+        _body_file = open(utf16_BEBOM_file, 'r')
+        _body_bytes = _body_file.read()
+        _body_bytes = _body_bytes.decode(utf16_BEBOM_encoding.lower())
+        http_body = http_request.body()
+        #the body should be in the encoding specified in the request
+        self.assertEqual(_body_bytes, http_body)
+
+        #UTF-8
+        #reset content-type and encoding
+        utf8_body = open(utf8_file, 'r')
+        http_request.content_type = "text/plain"
+        http_request.encoding = utf8_encoding.lower()
+        #set the request_body stream
+        http_request.request_stream = LazyStream(utf8_body)
+        http_request._body_parsing_started = False
+        http_request.parse_request_body()
+
+        #check if the request body was properly decoded as ISO-8859-1
+        _body_file = open(utf8_file, 'r')
+        _body_bytes = _body_file.read()
+        _body_bytes = _body_bytes.decode(utf8_encoding.lower())
+        http_body = http_request.body()
+        #the body should be in the encoding specified in the request
+        self.assertEqual(_body_bytes, http_body)
 
 unittest.main()
