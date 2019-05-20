@@ -50,7 +50,7 @@ class NoHostFoundException(Exception):
     """
     pass
 
-class HttpRequest:
+class HttpRequest(object):
     """A basic HTTP request."""
 
     # The encoding used in GET/POST dicts. None means use default setting.
@@ -175,6 +175,8 @@ class HttpRequest:
             del self.GET
         if hasattr(self, '_post'):
             del self._post
+        if hasattr(self, '_body'):
+            del self._body
     
     def set_path(self, path, encode_safely=True):
         """
@@ -394,11 +396,10 @@ class HttpRequest:
         #restart content-type check
         if self.content_type == 'text/plain' or self.content_type == 'text/html'\
             or self.content_type == 'application/json':
-            _body = self.body()
-            self._body = self._body.decode(self.encoding)
+            self._body = self.body().decode(self.encoding)
         
         self.POST = self._post
-        self.FILES = self._files                
+        self.FILES = self._files
         return
 
     def close(self):
