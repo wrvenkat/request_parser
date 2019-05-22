@@ -4,9 +4,8 @@ import unittest
 
 from future.backports.urllib.parse import urlencode, quote
 
-from request_parser.http.request import HttpRequest, RawPostDataException, UnreadablePostError
+from request_parser.http.request import HttpRequest, RawPostDataException, UnreadablePostError, split_domain_port
 from request_parser.http.multipartparser import MultiPartParserError
-from request_parser.http.request import split_domain_port
 from request_parser.tests import testutils
 from request_parser.http.constants import MetaDict
 

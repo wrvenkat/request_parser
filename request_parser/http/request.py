@@ -12,12 +12,10 @@ from request_parser.exceptions.exceptions import (
     ImproperlyConfigured, RequestDataTooBig,
 )
 from request_parser.files import uploadhandler
-from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError, parse_header
+from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError, parse_header, LazyStream
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict, ImmutableMultiValueDict
 from request_parser.utils.encoding import escape_uri_path, iri_to_uri, uri_to_iri
-from request_parser.utils.http import is_same_domain, limited_parse_qsl
-from request_parser.http.multipartparser import LazyStream
-from request_parser.utils.http import _urlparse as urlparse
+from request_parser.utils.http import is_same_domain, limited_parse_qsl, _urlparse as urlparse
 from constants import MetaDict
 
 from six import reraise as raise_
