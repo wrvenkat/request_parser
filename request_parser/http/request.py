@@ -44,6 +44,14 @@ class RawPostDataException(Exception):
     """
     pass
 
+class RequestHeaderParseException(Exception):
+    """
+    You cannot parse request body wihtout first parsing request
+    header.
+    """
+    def __init__(self, message, code=None, params=None):
+        super(RequestHeaderParseException, self).__init__(message, code, params)
+
 class NoHostFoundException(Exception):
     """
     Raised when no HOST header is not present in the request.
@@ -59,10 +67,10 @@ class HttpRequest(object):
 
     def __init__(self, request_stream=None):
         self._stream = request_stream
-        self.request_stream = None
-
-        #read status flags
-        self._read_started = False
+        #create a LazyStream out of the _stream
+        if self._stream is None:
+            self._stream = BytesIO()
+        self._stream = LazyStream(self._stream)
 
         #Parsing status flags
         self._parsing_started = False
@@ -84,9 +92,6 @@ class HttpRequest(object):
         self.protocol_info = None
         self.content_type = None
         self.content_params = None
-        
-        if self._stream:
-            self.parse_request_header()
 
     def __repr__(self):
         if self.method is None or not self.get_full_path():
@@ -178,6 +183,98 @@ class HttpRequest(object):
         if hasattr(self, '_body'):
             del self._body
     
+    @property
+    def stream(self):
+        if hasattr(self, '_stream') and not self._stream:
+            return self._stream
+        return None
+
+    @stream.setter
+    def stream(self, val):
+        """
+        Set the request stream. This includes the stream for both header and body.
+
+        Setting a new stream resets the parse META data for request header and parse
+        status deleting any META data. This is because, by setting a new stream, 
+        the intent is to restart parsing (at least reparse the header).
+
+        This reset doesn't reset POST, FILES and _body but calling parse_request_body() is
+        possible.
+        """
+        self._stream = val
+        #create a LazyStream out of the _stream
+        if self._stream is None:
+            self._stream = BytesIO()
+        self._stream = LazyStream(self._stream)
+
+        #reset the header META data
+        self._reset_header_meta_data()
+        #reset parse status flags
+        self._parsing_started = False
+        self._body_parsing_started = False
+    
+    @property
+    def body_stream(self):
+        if hasattr(self, '_stream') and not self._stream:
+            return self._stream
+        return None
+
+    @body_stream.setter
+    def body_stream(self, val):
+        """
+        Set the request stream. This is specific for body.
+
+        Setting a new stream for body signals the intent to call parse_request_body()
+        with the current META data/request headers. So, only the body parsing flags 
+        and META data are reset.
+        """
+        self._stream = val
+        #create a LazyStream out of the _stream
+        if self._stream is None:
+            self._stream = BytesIO()
+        self._stream = LazyStream(self._stream)
+
+        #reset the POST, FILEs and _body
+        if hasattr(self, 'POST'):
+            del self.POST
+        if hasattr(self, 'FILES'):
+            del self.FILES
+        if hasattr(self, '_body'):
+            del self._body
+        
+        #reset the body parsing flag
+        self._body_parsing_started = False
+
+    def _reset_header_meta_data(self):
+        """
+        Remove the listed below META data for a parser instance.
+        Note that the POST, FILES and _body are exempt because they're context
+        dependant.
+
+        Called by stream.setter to reset parser status.
+        """
+        if hasattr(self, 'GET'):
+            del self.GET
+        if hasattr(self, 'META'):
+            del self.META
+            
+        if hasattr(self, 'method'):
+            del self.method
+        if hasattr(self, 'scheme'):
+            del self.scheme
+        if hasattr(self, 'host'):
+            del self.host
+        if hasattr(self, 'port'):
+            del self.port
+        if hasattr(self, 'path'):
+            del self.path
+        if hasattr(self, 'protocol_info'):
+            del self.protocol_info
+        if hasattr(self, 'content_type'):
+            del self.content_type
+        if hasattr(self, 'content_params'):
+            del self.content_params
+
     def set_path(self, path, encode_safely=True):
         """
         Set a path where path is a UNICODE string.
@@ -238,8 +335,8 @@ class HttpRequest(object):
                 raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
 
             try:
-                #At this point, remember that, self.request_stream points to the start of the body
-                self._body = self.request_stream.read()
+                #At this point, remember that, _stream points to the start of the body
+                self._body = self.read()
             except IOError as e:
                 raise_(UnreadablePostError(*e.args), e)
                 #raise UnreadablePostError(*e.args) from e
@@ -259,9 +356,10 @@ class HttpRequest(object):
             return
 
         #create a LazyStream out of the _stream
-        if self._stream is None:
-            self._stream = BytesIO()
-        request_header_stream = LazyStream(self._stream)
+        #if self._stream is None:
+            #self._stream = BytesIO()
+        #request_header_stream = LazyStream(self._stream)
+        request_header_stream = self._stream
         request_header = ''
 
         #read until we find a '\r\n\r\n' sequence
@@ -339,9 +437,6 @@ class HttpRequest(object):
         #Add a immutable version of request_headers dictionary into META dictionary
         self.META[MetaDict.Info.REQ_HEADERS] = ImmutableMultiValueDict(request_headers)
 
-        #complete the call by assigning the start of body to the request body start
-        self.request_stream = request_header_stream
-
     def _mark_post_parse_error(self):
         self._post = QueryDict()
         self._files = MultiValueDict()
@@ -361,9 +456,10 @@ class HttpRequest(object):
         #reparsing only the body
         if not self._parsing_started:
             self._mark_post_parse_error()
-            return
+            raise RequestHeaderParseException("Request header not parsed.Parse request header first.")
 
-        body_stream = self.request_stream
+        #body_stream = self.request_stream
+        body_stream = self._stream
         data = body_stream.read(1)
 
         #check if the body is empty
@@ -415,15 +511,13 @@ class HttpRequest(object):
     # request.body, self._stream points to a BytesIO instance
     # containing that data.
 
-    def read(self, *args, **kwargs):
-        self._read_started = True
+    def read(self, *args, **kwargs):        
         try:
             return self._stream.read(*args, **kwargs)
         except IOError as e:
             raise_(UnreadablePostError(*e.args), e)
 
-    def readline(self, *args, **kwargs):
-        self._read_started = True
+    def readline(self, *args, **kwargs):        
         try:
             return self._stream.readline(*args, **kwargs)
         except IOError as e:
