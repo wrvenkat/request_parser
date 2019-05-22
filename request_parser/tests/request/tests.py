@@ -5,7 +5,7 @@ import unittest
 from future.backports.urllib.parse import urlencode, quote
 
 from request_parser.http.request import HttpRequest, RawPostDataException, UnreadablePostError
-from request_parser.http.multipartparser import MultiPartParserError, LazyStream
+from request_parser.http.multipartparser import MultiPartParserError
 from request_parser.http.request import split_domain_port
 from request_parser.tests import testutils
 from request_parser.http.constants import MetaDict
@@ -30,7 +30,6 @@ class HttpRequestBasicTests(unittest.TestCase):
         # and FILES should be MultiValueDict
         self.assertEqual(request.FILES.getlist('foo'), [])
 
-        self.assertIsNone(request.request_stream)
         self.assertIsNone(request.method)
         self.assertIsNone(request.scheme)
         self.assertIsNone(request.host)
@@ -95,6 +94,7 @@ class RequestHeaderTests(unittest.TestCase):
         http_request = HttpRequest(request_stream)
 
         #Confirm Request Headers
+        http_request.parse_request_header()
         request_headers = http_request.META[MetaDict.Info.REQ_HEADERS]
         self.assertEqual("www.knowhere123.com", http_request.get_host())
         self.assertListEqual(["image/gif, image/jpeg, */*"], request_headers.getlist('Accept'))
@@ -114,6 +114,7 @@ class RequestHeaderTests(unittest.TestCase):
         """
         request_stream = open(self.request_file, 'r')
         http_request = HttpRequest(request_stream)
+        http_request.parse_request_header()
 
         #Request line meta data check
         self.assertEqual("PUT", http_request.get_method())
@@ -128,6 +129,7 @@ class RequestHeaderTests(unittest.TestCase):
         """
         request_stream = open(self.request_file, 'r')
         http_request = HttpRequest(request_stream)
+        http_request.parse_request_header()
 
         #URL encoded UTF-8        
         self.assertEqual("UNKNOWN://www.knowhere123.com/caf%C3%A9/upload", http_request.get_uri())
@@ -145,6 +147,7 @@ class RequestHeaderTests(unittest.TestCase):
         """
         request_stream = open(self.request_file, 'r')
         http_request = HttpRequest(request_stream)
+        http_request.parse_request_header()
 
         #URI/path string (excluding querys tring) set/reset test
         self.assertEqual("UNKNOWN://www.knowhere123.com/caf%C3%A9/upload", http_request.get_uri())
@@ -174,6 +177,7 @@ class RequestHeaderTests(unittest.TestCase):
         #an http_request
         request_stream = open(self.request_file, 'r')
         http_request = HttpRequest(request_stream)
+        http_request.parse_request_header()
 
         #ISO-88591-1
         #reset content-type and encoding
@@ -181,8 +185,7 @@ class RequestHeaderTests(unittest.TestCase):
         http_request.content_type = "text/plain"
         http_request.encoding = iso_88591_1_encoding.lower()
         #set the request_body stream
-        http_request.request_stream = LazyStream(iso_88591_1_body)
-        http_request._body_parsing_started = False
+        http_request.body_stream = iso_88591_1_body
         http_request.parse_request_body()
 
         #check if the request body was properly decoded as ISO-8859-1
@@ -199,8 +202,7 @@ class RequestHeaderTests(unittest.TestCase):
         http_request.content_type = "text/plain"
         http_request.encoding = utf16_BEBOM_encoding.lower()
         #set the request_body stream
-        http_request.request_stream = LazyStream(utf16_BEBOM_body)
-        http_request._body_parsing_started = False
+        http_request.body_stream = utf16_BEBOM_body
         http_request.parse_request_body()
 
         #check if the request body was properly decoded as ISO-8859-1
@@ -217,8 +219,7 @@ class RequestHeaderTests(unittest.TestCase):
         http_request.content_type = "text/plain"
         http_request.encoding = utf8_encoding.lower()
         #set the request_body stream
-        http_request.request_stream = LazyStream(utf8_body)
-        http_request._body_parsing_started = False
+        http_request.body_stream = utf8_body
         http_request.parse_request_body()
 
         #check if the request body was properly decoded as ISO-8859-1
