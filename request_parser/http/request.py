@@ -190,13 +190,13 @@ class HttpRequest(object):
     @stream.setter
     def stream(self, val):
         """
-        Set the request stream. This includes the stream for both header and body.
+        Set the main request stream. This includes the stream for both header and body.
 
         Setting a new stream resets the parse META data for request header and parse
-        status deleting any META data. This is because, by setting a new stream, 
+        status flags and deleting any META data. This is because, by setting a new stream, 
         the intent is to restart parsing (at least reparse the header).
 
-        This reset doesn't reset POST, FILES and _body but calling parse_request_body() is
+        This reset doesn't reset POST, FILES and _body. However, calling parse_request_body() is
         possible.
         """
         self._stream = val
@@ -324,6 +324,8 @@ class HttpRequest(object):
         """
         Return body as a raw byte stream.
         """
+        #TODO: Once we fix the logic behind guessing request body size using Content-Length
+        #META data, we should look into removing the first check here.        
         if self._parsing_started and not hasattr(self, '_body'):
             # Limit the maximum request data size that will be handled in-memory.
             #TODO: Figure out a way to do BufferedReading when in-memory body parsing is not possible

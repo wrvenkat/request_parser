@@ -156,7 +156,11 @@ class RequestHeaderTests(unittest.TestCase):
         self.assertEqual("UNKNOWN://www.knowhere123.com/سلام/this%/is$*()$!@/a/new/path/Name/Müeller", http_request.get_uri(raw=True))
         #print http_request.get_uri()
     
-    def test_http_request_encoding_metadata_reset(self):
+    def test_http_request_encoding_and_bodystream_metadata_reset(self):
+        """
+        This test covers the encoding set/reset and the body_stream reset
+        cases.
+        """
         #charset/encoding reset test
         encoded_body_dir = "request parse test files/encoded body"
         encoded_body_dir = testutils.get_abs_path(encoded_body_dir)
