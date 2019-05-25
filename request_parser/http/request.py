@@ -73,11 +73,19 @@ class HttpRequest(object):
         #Parsing status flags
         self._parsing_started = False
         self._body_parsing_started = False
-
-        self.GET = QueryDict(mutable=True)
+    
         self.POST = QueryDict(mutable=True)
-        self.META = {}
         self.FILES = MultiValueDict()
+
+        self._re_init()
+
+    def _re_init(self):
+        """
+        Helper method to init/reinit an object.
+        """
+        
+        self.GET = QueryDict(mutable=True)
+        self.META = {}
 
         #represents a set of properties of an HTTP request
         #that are essential for quick info gathering
@@ -240,6 +248,10 @@ class HttpRequest(object):
         if hasattr(self, '_body'):
             del self._body
         
+        #re-init POST and FILES
+        self.POST = QueryDict(mutable=True)
+        self.FILES = MultiValueDict()
+
         #reset the body parsing flag
         self._body_parsing_started = False
 
@@ -272,6 +284,9 @@ class HttpRequest(object):
             del self.content_type
         if hasattr(self, 'content_params'):
             del self.content_params
+        
+        #re-init the object
+        self._re_init()
 
     def set_path(self, path, encode_safely=True):
         """
