@@ -80,10 +80,10 @@ class RequestHeaderTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         test_files_dir = "request parse test files"
-        test_files_dir = testutils.get_abs_path(test_files_dir)
+        cls.test_files_dir = testutils.get_abs_path(test_files_dir)
 
         request_file = "complex-request1.txt"
-        cls.request_file = test_files_dir + request_file
+        cls.request_file = cls.test_files_dir + request_file
     
     def test_http_headers_post_header_parse(self):
         """
@@ -232,5 +232,40 @@ class RequestHeaderTests(unittest.TestCase):
         http_body = http_request.body()
         #the body should be in the encoding specified in the request
         self.assertEqual(_body_bytes, http_body)
+
+    def test_http_request_stream_set(self):
+        request_stream = open(self.request_file, 'r')
+        http_request = HttpRequest(request_stream)
+
+        #Confirm Request Headers
+        http_request.parse_request_header()
+        request_headers = http_request.META[MetaDict.Info.REQ_HEADERS]
+        self.assertEqual("www.knowhere123.com", http_request.get_host())
+        self.assertListEqual(["image/gif, image/jpeg, */*"], request_headers.getlist('Accept'))
+        self.assertListEqual(["en-us"], request_headers.getlist('Accept-Language'))
+        self.assertListEqual(["gzip, deflate"], request_headers.getlist('Accept-Encoding'))
+        self.assertListEqual(["cookie1=value1, cookie2=value2", "cookie3=value3, cookie4=value4"], request_headers.getlist('Cookies'))
+        self.assertListEqual(["Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"], request_headers.getlist('User-Agent'))
+        self.assertListEqual(["830543"], request_headers.getlist('Content-Length'))        
+        self.assertEqual("multipart/form-data", http_request.content_type)
+        self.assertIsNone(http_request.content_params)
+
+        #another request file
+        another_test_file = "get-request1.txt"
+        another_test_file = self.test_files_dir + another_test_file
+        another_test_file_stream = open(another_test_file, 'r')
+        http_request.stream = another_test_file_stream
+
+        #Confirm new Request Headers
+        http_request.parse_request_header()
+        http_request.parse_request_body()
+        request_headers = http_request.META[MetaDict.Info.REQ_HEADERS]
+        self.assertEqual("www.knowhere484.com", http_request.get_host())        
+        self.assertListEqual(["en-us"], request_headers.getlist('Accept-Language'))
+        self.assertListEqual(["gzip, deflate"], request_headers.getlist('Accept-Encoding'))
+        self.assertListEqual(["cookie3=value3, cookie4=value4"], request_headers.getlist('Cookies'))
+        self.assertListEqual(["Safari/4.0 (compatible; MSIE5.01; Linux Blah)"], request_headers.getlist('User-Agent'))
+        self.assertEqual("application/x-www-form-urlencoded", http_request.content_type)
+        self.assertIsNone(http_request.content_params)
 
 unittest.main()
