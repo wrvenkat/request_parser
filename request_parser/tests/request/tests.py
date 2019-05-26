@@ -1,5 +1,6 @@
 from io import BytesIO
 from itertools import chain
+import base64
 import unittest
 
 from future.backports.urllib.parse import urlencode, quote
@@ -295,13 +296,19 @@ class RequestTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         test_files_dir = "request parse test files"
-        cls.test_files_dir = testutils.get_abs_path(test_files_dir)
-
+        test_files_dir = testutils.get_abs_path(test_files_dir)
+        
+        #GET request
         get_request_with_query_file = "get-request-with-query-string.txt"
-        cls.get_request_with_query = cls.test_files_dir + get_request_with_query_file
+        cls.get_request_with_query = test_files_dir + get_request_with_query_file
 
+        #POST request
         post_request_with_query_file = "post-request-with-query.txt"
-        cls.post_request_with_query_file = cls.test_files_dir + post_request_with_query_file
+        cls.post_request_with_query_file = test_files_dir + post_request_with_query_file
+
+        #PUT request with multipart-form-data
+        put_request_multipart_file = "complex-request1.txt"
+        cls.put_request_multipart_file = test_files_dir + put_request_multipart_file
 
     def test_request_query_string(self):
         #get file stream
@@ -339,5 +346,35 @@ class RequestTests(unittest.TestCase):
 
         #close request file
         post_request_with_query_stream.close()
+
+    def test_request_multipart_request(self):
+        """
+        Test a complex request with multipart-form-data body.
+        """
+        multipart_request_stream = open(self.put_request_multipart_file, 'r')
+
+        #get a request handle
+        multipart_request = HttpRequest(multipart_request_stream)
+        multipart_request.parse_request_header()
+        multipart_request.parse_request_body()
+        
+        #request data that should be present
+        _POST = dict()
+        _POST['id'] = ['123e4567-e89b-12d3-a456-426655440000']
+        _POST['address'] = ['{\r\n  \"street\": \"3, Garden St\",\r\n  \"city\": \"Hillsbery, UT\"\r\n}']
+        _GET = dict()
+
+        #test
+        self.assertDictEqual(_POST, multipart_request.POST)
+        self.assertDictEqual(_GET, multipart_request.GET)
+        self.assertIn('profileImage', multipart_request.FILES)
+        _file = multipart_request.FILES.get('profileImage')
+        #we create a string equivalent to base64 encoding the first 100 bytes from the raw file.
+        first_100_bytes_b64 = '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDg=='
+        #we assert that it is equal to the same that can be obtained by reading the file
+        self.assertEquals(first_100_bytes_b64, base64.b64encode(_file.read(100)))
+
+        #close it out
+        multipart_request_stream.close()
 
 unittest.main()
