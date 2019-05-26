@@ -802,7 +802,7 @@ def parse_request_headers(request_header_stream):
     
     #sanity check
     if len(request_headers) == 0:
-        raise InvalidHttpRequest("Invalid request.")
+        raise InvalidHttpRequest("Invalid request. No request headers.", 400)
     
     #construct an immutable version of MultiValueDict for the request headers
     request_headers = MultiValueDict(request_headers)
@@ -816,7 +816,7 @@ def parse_request_line(request_line=''):
     """
     _splits = request_line.split(' ')
 
-    if len(_splits) > 3:
+    if len(_splits) != 3:
         raise InvalidHttpRequest("Invalid request line.", 400)
     method, uri, protocol_version = _splits
 
