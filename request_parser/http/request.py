@@ -770,7 +770,7 @@ def parse_request_headers(request_header_stream):
     if end != -1:
         request_line = request_header_stream[start:end]
     else:
-        raise InvalidHttpRequest("Invalid request.")
+        raise InvalidHttpRequest("Invalid request. Request line terminated incorrectly.", 400)
     end+=2
     request_header_stream = request_header_stream[end:]
     start = 0
@@ -797,7 +797,7 @@ def parse_request_headers(request_header_stream):
                 request_headers[header] = list()
                 request_headers[header].append(value)
         else:
-            raise InvalidHttpRequest("Invalid request header: {}".format(header))
+            raise InvalidHttpRequest("Invalid request header: {}".format(request_header), 400)
         end = request_header_stream.find(b'\r\n', 1)
     
     #sanity check
@@ -820,8 +820,8 @@ def parse_request_line(request_line=''):
         raise InvalidHttpRequest("Invalid request line.", 400)
     method, uri, protocol_version = _splits
 
-    if not method or not uri or not protocol_version:
-        raise InvalidHttpRequest("Invalid request line.", 400)
+#    if not method or not uri or not protocol_version:
+#        raise InvalidHttpRequest("Invalid request line.", 400)
     
     request_uri_result = urlparse(uri)
     request_line_result = {}
