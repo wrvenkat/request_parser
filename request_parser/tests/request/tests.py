@@ -9,8 +9,8 @@ from request_parser.http.request import HttpRequest, RawPostDataException, Unrea
 from request_parser.http.multipartparser import MultiPartParserError
 from request_parser.tests import testutils
 from request_parser.http.constants import MetaDict
-
 from request_parser.utils.encoding import iri_to_uri, uri_to_iri
+from request_parser.http.request import InvalidHttpRequest, parse_request_headers
 
 class HttpRequestBasicTests(unittest.TestCase):
 
@@ -376,5 +376,58 @@ class RequestTests(unittest.TestCase):
 
         #close it out
         multipart_request_stream.close()
+
+    def test_invalid_request_header(self):
+        #Incorrectly terminated request
+        invalid_request_1 = "GET asasd\r\nHost: www.knowhere123.com\r\n"
+        invalid_request_1 = BytesIO(invalid_request_1)
+        invalid_http_request = HttpRequest(invalid_request_1)
+        with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
+            invalid_http_request.parse_request_header()        
+        self.assertEquals("Invalid HTTP request.", iHR_Exception.exception.args[0])
+        self.assertEquals(400, iHR_Exception.exception.args[1])
+
+        #reuest without any headers
+        invalid_request_2 = "GET dadsadsasd HTTP/1.1\r\n\r\n\r\n"
+        invalid_request_2 = BytesIO(invalid_request_2)
+        invalid_http_request = HttpRequest(invalid_request_2)
+        with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
+            invalid_http_request.parse_request_header()
+        self.assertEquals("Invalid request. No request headers.", iHR_Exception.exception.args[0])
+        self.assertEquals(400, iHR_Exception.exception.args[1])
+
+        #invalid request line_0
+        invalid_request = "GET asasd HTTP/1.1"
+        with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
+            parse_request_headers(invalid_request)
+        self.assertEqual("Invalid request. Request line terminated incorrectly.", iHR_Exception.exception.args[0])
+        self.assertEquals(400, iHR_Exception.exception.args[1])
+
+        #incorrect request line_1
+        invalid_request_3 = "GET asasd\r\nHost: www.knowhere123.com\r\n\r\n"
+        invalid_request_3 = BytesIO(invalid_request_3)
+        invalid_http_request = HttpRequest(invalid_request_3)
+        with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
+            invalid_http_request.parse_request_header()
+        self.assertEquals("Invalid request line.", iHR_Exception.exception.args[0])
+        self.assertEquals(400, iHR_Exception.exception.args[1])
+
+        #incorrect request line_2
+        invalid_request_4 = "GET asasd asdas HTTP/1.1\r\nHost: www.knowhere123.com\r\n\r\n"
+        invalid_request_4 = BytesIO(invalid_request_4)
+        invalid_http_request = HttpRequest(invalid_request_4)
+        with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
+            invalid_http_request.parse_request_header()
+        self.assertEquals("Invalid request line.", iHR_Exception.exception.args[0])
+        self.assertEquals(400, iHR_Exception.exception.args[1])
+
+        #incorrect request header
+        invalid_request_4 = "GET asasd HTTP/1.1\r\nHost www.knowhere123.com\r\n\r\n"
+        invalid_request_4 = BytesIO(invalid_request_4)
+        invalid_http_request = HttpRequest(invalid_request_4)
+        with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
+            invalid_http_request.parse_request_header()        
+        self.assertIn("Invalid request header", iHR_Exception.exception.args[0])
+        self.assertEquals(400, iHR_Exception.exception.args[1])        
 
 unittest.main()
