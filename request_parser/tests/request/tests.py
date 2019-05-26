@@ -106,6 +106,9 @@ class RequestHeaderTests(unittest.TestCase):
         self.assertListEqual(["830543"], request_headers.getlist('Content-Length'))
         self.assertEqual("multipart/form-data", http_request.content_type)
         self.assertIsNone(http_request.content_params)
+
+        #close the file/stream
+        request_stream.close()
     
     def test_http_request_line(self):
         """
@@ -122,6 +125,9 @@ class RequestHeaderTests(unittest.TestCase):
         self.assertEqual("HTTP/1.1", http_request.get_protocol_info())
         self.assertEqual("65536", http_request.get_port())
 
+        #close the file/stream
+        request_stream.close()
+
     def test_http_request_url_reconstruct(self):
         """
         Test reconstructing the original request path with meta data.
@@ -130,7 +136,7 @@ class RequestHeaderTests(unittest.TestCase):
         http_request = HttpRequest(request_stream)
         http_request.parse_request_header()
 
-        #URL encoded UTF-8        
+        #URL encoded UTF-8
         self.assertEqual("UNKNOWN://www.knowhere123.com/caf%C3%A9/upload", http_request.get_uri())
         #get RAW URI
         #café here is UTF-8 encoded, so when get_uri(raw=True) returns,
@@ -139,6 +145,9 @@ class RequestHeaderTests(unittest.TestCase):
         self.assertEqual("UNKNOWN://www.knowhere123.com/café/upload", http_request.get_uri(raw=True))
         self.assertFalse(http_request.is_ajax())
         self.assertFalse(http_request.is_secure())
+
+        #close the file/stream
+        request_stream.close()
     
     def test_http_request_path_metadata_reset(self):
         """
@@ -155,6 +164,9 @@ class RequestHeaderTests(unittest.TestCase):
         self.assertEqual("UNKNOWN://www.knowhere123.com/%D8%B3%D9%84%D8%A7%D9%85/this%/is$*()$!@/a/new/path/Name/M%C3%BCeller", http_request.get_uri())
         self.assertEqual("UNKNOWN://www.knowhere123.com/سلام/this%/is$*()$!@/a/new/path/Name/Müeller", http_request.get_uri(raw=True))
         #print http_request.get_uri()
+
+        #close the file/stream
+        request_stream.close()
     
     def test_http_request_encoding_and_bodystream_metadata_reset(self):
         """
@@ -233,6 +245,9 @@ class RequestHeaderTests(unittest.TestCase):
         #the body should be in the encoding specified in the request
         self.assertEqual(_body_bytes, http_body)
 
+        #close the file/stream
+        request_stream.close()
+
     def test_http_request_stream_set(self):
         request_stream = open(self.request_file, 'r')
         http_request = HttpRequest(request_stream)
@@ -267,5 +282,62 @@ class RequestHeaderTests(unittest.TestCase):
         self.assertListEqual(["Safari/4.0 (compatible; MSIE5.01; Linux Blah)"], request_headers.getlist('User-Agent'))
         self.assertEqual("application/x-www-form-urlencoded", http_request.content_type)
         self.assertIsNone(http_request.content_params)
+
+        #close the file/stream
+        request_stream.close()
+        another_test_file_stream.close()
+
+class RequestTests(unittest.TestCase):
+    """
+    Test the request parsing - Invalid requests, query string. Post data - key value pairs,
+    multipart/form-data, other content-types.
+    """
+    @classmethod
+    def setUpClass(cls):
+        test_files_dir = "request parse test files"
+        cls.test_files_dir = testutils.get_abs_path(test_files_dir)
+
+        get_request_with_query_file = "get-request-with-query-string.txt"
+        cls.get_request_with_query = cls.test_files_dir + get_request_with_query_file
+
+        post_request_with_query_file = "post-request-with-query.txt"
+        cls.post_request_with_query_file = cls.test_files_dir + post_request_with_query_file
+
+    def test_request_query_string(self):
+        #get file stream
+        get_request_with_query_stream = open(self.get_request_with_query,'r')
+
+        get_request_with_query = HttpRequest(get_request_with_query_stream)
+        get_request_with_query.parse_request_header()
+        get_request_with_query.parse_request_body()
+        request_GET = dict()
+        request_GET['source'] = ['hp']
+        request_GET['ei'] = ['H8jpXI_lN4OiswXa-oOwAw']
+        request_GET['q'] = ['asdfadsf']
+        request_GET['oq'] = ['asdfadsf']
+        request_GET['gs_l'] = ['psy-ab.12..0j0i10l3j0j0i10l5.1255.1577..2445...0.0..1.153.972.2j6......0....1..gws-wiz.....0..0i131.DPwpRijoAMc']
+        self.assertDictEqual(request_GET, get_request_with_query.GET)
+        self.assertDictEqual(dict(), get_request_with_query.POST)
+
+        #close get request
+        get_request_with_query_stream.close()
+
+        #get file stream
+        post_request_with_query_stream = open(self.post_request_with_query_file,'r')
+
+        post_request_with_query = HttpRequest(post_request_with_query_stream)
+        post_request_with_query.parse_request_header()
+        post_request_with_query.parse_request_body()
+        request_POST = dict()
+        request_POST['source'] = ['hp']
+        request_POST['ei'] = ['H8jpXI_lN4OiswXa-oOwAw']
+        request_POST['q'] = ['asdfadsf']
+        request_POST['oq'] = ['asdfadsf']
+        request_POST['gs_l'] = ['psy-ab.12..0j0i10l3j0j0i10l5.1255.1577..2445...0.0..1.153.972.2j6......0....1..gws-wiz.....0..0i131.DPwpRijoAMc']
+        self.assertDictEqual(request_POST, post_request_with_query.POST)
+        self.assertDictEqual(dict(), post_request_with_query.GET)
+
+        #close request file
+        post_request_with_query_stream.close()
 
 unittest.main()
