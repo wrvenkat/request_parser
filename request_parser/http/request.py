@@ -7,7 +7,7 @@ from itertools import chain
 from urllib import quote, urlencode
     #urljoin, urlsplit
 
-from request_parser.conf.settings import Settings as settings
+from request_parser.conf.settings import Settings
 from request_parser.exceptions.exceptions import (
     ImproperlyConfigured, RequestDataTooBig,
 )
@@ -23,7 +23,7 @@ from six import reraise as raise_
 RAISE_ERROR = object()
 #validates a given string for a format of the form host:port
 host_validation_re = re.compile(r"^([a-z0-9.-]+|\[[a-f0-9]*:[a-f0-9\.:]+\])(:\d+)?$")
-
+settings = Settings.default()
 
 class UnreadablePostError(IOError):
     pass
@@ -316,7 +316,7 @@ class HttpRequest(object):
         settings.FILE_UPLOAD_HANDLERS
         """
         self._upload_handlers = [uploadhandler.load_handler(handler, self)
-                                 for handler in settings.FILE_UPLOAD_HANDLERS]
+                                 for handler in Settings.FILE_UPLOAD_HANDLERS]
 
     @property
     def upload_handlers(self):

@@ -11,7 +11,7 @@ import cgi
 from six import reraise as raise_from
 from future.backports.urllib.parse import unquote
 
-from request_parser.conf.settings import Settings as settings
+from request_parser.conf.settings import Settings
 from request_parser.exceptions.exceptions import (
     RequestDataTooBig, TooManyFieldsSent, InputStreamExhausted
 )
@@ -24,6 +24,8 @@ from request_parser.utils.text import unescape_entities
 from request_parser.utils.datastructures import LazyStream, ChunkIter
 
 __all__ = ('MultiPartParser', 'MultiPartParserError', 'InputStreamExhausted')
+
+settings = Settings.default()
 
 class MultiPartParserError(Exception):
     pass
