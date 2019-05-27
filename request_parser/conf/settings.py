@@ -55,9 +55,9 @@ class Settings:
 
         #DATA_UPLOAD_MAX_FIELDS
         if Settings.Key.DATA_UPLOAD_MAX_FIELDS in settings_dict:
-            self.DATA_UPLOAD_MAX_FIELDS = settings_dict[Settings.Key.DATA_UPLOAD_MAX_FIELDS]
+            self.DATA_UPLOAD_MAX_NUMBER_FIELDS = settings_dict[Settings.Key.DATA_UPLOAD_MAX_FIELDS]
         else:
-            self.DATA_UPLOAD_MAX_FIELDS =  default_settings.DATA_UPLOAD_MAX_FIELDS
+            self.DATA_UPLOAD_MAX_NUMBER_FIELDS =  default_settings.DATA_UPLOAD_MAX_NUMBER_FIELDS
 
         #DEFAULT_CHARSET
         if Settings.Key.DEFAULT_CHARSET in settings_dict:
@@ -82,7 +82,7 @@ class Settings:
         #default is 100 MB
         settings.DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * ((2 ** 10) * (2 ** 10))
 
-        settings.DATA_UPLOAD_MAX_FIELDS = 4096
+        settings.DATA_UPLOAD_MAX_NUMBER_FIELDS = 4096
 
         #Default charset per HTTP 1.1 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
         settings.DEFAULT_CHARSET = 'ISO-8859-1'
