@@ -11,6 +11,7 @@ from request_parser.tests import testutils
 from request_parser.http.constants import MetaDict
 from request_parser.utils.encoding import iri_to_uri, uri_to_iri
 from request_parser.http.request import InvalidHttpRequest, parse_request_headers
+from request_parser.http.multipartparser import MultiPartParserError
 
 class HttpRequestBasicTests(unittest.TestCase):
 
@@ -430,4 +431,55 @@ class RequestTests(unittest.TestCase):
         self.assertIn("Invalid request header", iHR_Exception.exception.args[0])
         self.assertEquals(400, iHR_Exception.exception.args[1])        
 
+    def test_post_process_body_read(self):
+        """
+        Read body for a non text/plain request after parse_request_body().
+        """
+        http_request_stream = open(self.put_request_multipart_file, 'r')
+        http_request = HttpRequest(http_request_stream)
+        http_request.parse_request_header()
+        http_request.parse_request_body()
+        with self.assertRaises(RawPostDataException) as rPDE_Exception:
+            body = http_request.body()
+        self.assertEquals("You cannot access raw body after reading from request's data stream.", rPDE_Exception.exception.args[0])
+
+    def test_invalid_request_body(self):
+        """
+        Test request body.
+        """
+        http_request_stream = open(self.put_request_multipart_file, 'r')
+        http_request = HttpRequest(http_request_stream)
+        http_request.parse_request_header()
+
+        #Change Content-Type
+        request_headers = http_request.META['REQUEST_HEADERS']
+        request_headers._mutable = True
+        request_headers.setlist('Content-Type','application/x-www-form-urlencoded')
+        with self.assertRaises(MultiPartParserError) as mPPE_Exception:
+            http_request.parse_request_body()
+        self.assertEquals('Invalid Content-Type: application/x-www-form-urlencoded', mPPE_Exception.exception.args[0])
+        
+        #close the file
+        http_request_stream.close()
+
+        #get a POST request and pass it a multipart body
+        http_request_stream = open(self.post_request_with_query_file, 'r')
+        http_request = HttpRequest(http_request_stream)
+        http_request.parse_request_header()
+
+        #change request body
+        multipart_body = "---------------------------9051914041544843365972754266\r\n"
+        multipart_body += "Content-Disposition: form-data; name=\"file1\"; filename=\"a.txt\"\r\n"
+        multipart_body+= "Content-Type: text/plain\r\n\r\nContent of a.txt:\r\n"
+        multipart_body+= " abcdefghijklmnopqrstuvwxyz1234567890aabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz11223344556677889900~!@#$%^&*()_+\r\n"
+        multipart_body+= "---------------------------9051914041544843365972754266--\r\n\r\n"
+        multipart_body = BytesIO(multipart_body)
+        http_request.body_stream = multipart_body
+        http_request.parse_request_body()
+        self.assertIn(' name', http_request.POST)
+        self.assertEquals('"file1"', http_request.POST[' name'])
+
+        #close the file
+        http_request_stream.close()
+        
 unittest.main()
