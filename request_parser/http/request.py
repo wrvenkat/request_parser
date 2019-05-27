@@ -167,6 +167,16 @@ class HttpRequest(object):
             return True
         return False
 
+    def is_plain_text(self):
+        """
+        Returns true if Content-Type is text/plain
+        """
+        #TODO: Make it so that the content-type can be changed in the
+        #META dict
+        #req_headers = self.META[MetaDict.Info.REQ_HEADERS]
+        #content_type = req_headers.get('Content-Type')
+        return self.content_type == 'text/plain'
+
     @property
     def encoding(self):
         return self._encoding
@@ -338,10 +348,15 @@ class HttpRequest(object):
     def body(self):
         """
         Return body as a raw byte stream.
-        """
+        """        
+        #In the future, the self.is_plain_text() check should/could be replaced with
+        #a call to check any content-type who's processing is not handled and requires
+        #returning it raw
+        if self._body_parsing_started and not self.is_plain_text():
+            raise RawPostDataException("You cannot access raw body after reading from request's data stream.")
         #TODO: Once we fix the logic behind guessing request body size using Content-Length
-        #META data, we should look into removing the first check here.        
-        if self._parsing_started and not hasattr(self, '_body'):
+        #META data, we should look into removing the first check here.
+        elif self._parsing_started and not hasattr(self, '_body'):
             # Limit the maximum request data size that will be handled in-memory.
             #TODO: Figure out a way to do BufferedReading when in-memory body parsing is not possible
             #QUESTION: How/where is this used - is the self.read() used based on this?
@@ -355,8 +370,7 @@ class HttpRequest(object):
             except IOError as e:
                 raise_(UnreadablePostError(*e.args), e)
                 #raise UnreadablePostError(*e.args) from e
-        #elif self._body_parsing_started:
-            #raise RawPostDataException("You cannot access body after reading from request's data stream")
+        
         elif not self._parsing_started:
             self.parse_request_header()
             return self.body()
@@ -482,8 +496,6 @@ class HttpRequest(object):
             self._post, self._files = QueryDict(encoding=self._encoding), MultiValueDict()
             return
         body_stream.unget(data)
-
-        self._body_parsing_started = True
         
         if self.content_type == 'multipart/form-data':      
             try:
@@ -509,6 +521,7 @@ class HttpRequest(object):
             or self.content_type == 'application/json':
             self._body = self.body().decode(self.encoding)
         
+        self._body_parsing_started = True
         self.POST = self._post
         self.FILES = self._files
         return
