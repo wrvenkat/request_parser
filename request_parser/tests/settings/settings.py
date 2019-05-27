@@ -13,7 +13,7 @@ class SettingsTests(unittest.TestCase):
         self.assertTrue(hasattr(default_setting, "MAX_HEADER_SIZE"))
         self.assertTrue(hasattr(default_setting, "FILE_UPLOAD_MAX_MEMORY_SIZE"))
         self.assertTrue(hasattr(default_setting, "DATA_UPLOAD_MAX_MEMORY_SIZE"))
-        self.assertTrue(hasattr(default_setting, "DATA_UPLOAD_MAX_FIELDS"))
+        self.assertTrue(hasattr(default_setting, "DATA_UPLOAD_MAX_NUMBER_FIELDS"))
         self.assertTrue(hasattr(default_setting, "DEFAULT_CHARSET"))
 
         #confirm the values
@@ -21,7 +21,7 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(16, default_setting.MAX_HEADER_SIZE)
         self.assertEqual(80 * ((2 ** 10) * (2 ** 10)), default_setting.FILE_UPLOAD_MAX_MEMORY_SIZE)
         self.assertEqual(100 * ((2 ** 10) * (2 ** 10)), default_setting.DATA_UPLOAD_MAX_MEMORY_SIZE)
-        self.assertEqual(4096, default_setting.DATA_UPLOAD_MAX_FIELDS)
+        self.assertEqual(4096, default_setting.DATA_UPLOAD_MAX_NUMBER_FIELDS)
         self.assertEqual('ISO-8859-1', default_setting.DEFAULT_CHARSET)
     
     def test_custom_setting(self):
@@ -36,7 +36,7 @@ class SettingsTests(unittest.TestCase):
         self.assertTrue(hasattr(custom_setting, "MAX_HEADER_SIZE"))
         self.assertTrue(hasattr(custom_setting, "FILE_UPLOAD_MAX_MEMORY_SIZE"))
         self.assertTrue(hasattr(custom_setting, "DATA_UPLOAD_MAX_MEMORY_SIZE"))
-        self.assertTrue(hasattr(custom_setting, "DATA_UPLOAD_MAX_FIELDS"))
+        self.assertTrue(hasattr(custom_setting, "DATA_UPLOAD_MAX_NUMBER_FIELDS"))
         self.assertTrue(hasattr(custom_setting, "DEFAULT_CHARSET"))
 
         #confirm the values
@@ -44,7 +44,7 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(16, custom_setting.MAX_HEADER_SIZE)
         self.assertEqual(10 * ((2 ** 10) * (2 ** 10)), custom_setting.FILE_UPLOAD_MAX_MEMORY_SIZE)
         self.assertEqual(100 * ((2 ** 10) * (2 ** 10)), custom_setting.DATA_UPLOAD_MAX_MEMORY_SIZE)
-        self.assertEqual(4096, custom_setting.DATA_UPLOAD_MAX_FIELDS)
+        self.assertEqual(4096, custom_setting.DATA_UPLOAD_MAX_NUMBER_FIELDS)
         self.assertEqual('ISO-8859-1', custom_setting.DEFAULT_CHARSET)
 
 unittest.main()
