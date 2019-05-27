@@ -481,5 +481,5 @@ class RequestTests(unittest.TestCase):
 
         #close the file
         http_request_stream.close()
-        
+
 unittest.main()
