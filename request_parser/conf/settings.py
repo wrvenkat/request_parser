@@ -22,10 +22,6 @@ class Settings:
     #default is 100 MB
     DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * ((2 ** 10) * (2 ** 10))
 
-    #Flag that configures whether request-parser should treat requests
-    #as if they're meant for a web-proxy
-    WEB_PROXY = False
-
     #holds the different upload handlers
     #the ones listed below are the default ones which Django/request-parser
     #requires to work properly while others can be added
