@@ -71,8 +71,8 @@ class HttpRequest(object):
         self._stream = LazyStream(self._stream)
 
         #Parsing status flags
-        self._parsing_started = False
-        self._body_parsing_started = False
+        self._request_header_parsed = False
+        self._request_body_parsed = False
     
         self.POST = QueryDict(mutable=True)
         self.FILES = MultiValueDict()
@@ -226,8 +226,8 @@ class HttpRequest(object):
         #reset the header META data
         self._reset_header_meta_data()
         #reset parse status flags
-        self._parsing_started = False
-        self._body_parsing_started = False
+        self._request_header_parsed = False
+        self._request_body_parsed = False
     
     @property
     def body_stream(self):
@@ -263,7 +263,7 @@ class HttpRequest(object):
         self.FILES = MultiValueDict()
 
         #reset the body parsing flag
-        self._body_parsing_started = False
+        self._request_body_parsed = False
 
     def _reset_header_meta_data(self):
         """
@@ -352,11 +352,11 @@ class HttpRequest(object):
         #In the future, the self.is_plain_text() check should/could be replaced with
         #a call to check any content-type who's processing is not handled and requires
         #returning it raw
-        if self._body_parsing_started and not self.is_plain_text():
+        if self._request_body_parsed and not self.is_plain_text():
             raise RawPostDataException("You cannot access raw body after reading from request's data stream.")
         #TODO: Once we fix the logic behind guessing request body size using Content-Length
         #META data, we should look into removing the first check here.
-        elif self._parsing_started and not hasattr(self, '_body'):
+        elif self._request_header_parsed and not hasattr(self, '_body'):
             # Limit the maximum request data size that will be handled in-memory.
             #TODO: Figure out a way to do BufferedReading when in-memory body parsing is not possible
             #QUESTION: How/where is this used - is the self.read() used based on this?
@@ -371,7 +371,7 @@ class HttpRequest(object):
                 raise_(UnreadablePostError(*e.args), e)
                 #raise UnreadablePostError(*e.args) from e
         
-        elif not self._parsing_started:
+        elif not self._request_header_parsed:
             self.parse_request_header()
             return self.body()
         return self._body
@@ -381,7 +381,7 @@ class HttpRequest(object):
         Parse the request headers and populate the META dictionary.
         """
         #if parsing has already started, then simply return
-        if self._parsing_started:
+        if self._request_header_parsed:
             return
 
         #create a LazyStream out of the _stream
@@ -395,7 +395,7 @@ class HttpRequest(object):
         request_header_end = -1
         while request_header_end == -1:
             chunk = request_header_stream.read(settings.MAX_HEADER_SIZE)
-            self._parsing_started = True
+            self._request_header_parsed = True
             if not chunk:
                 break
             request_header_end = chunk.find(b'\r\n\r\n')
@@ -476,14 +476,14 @@ class HttpRequest(object):
         """
 
         #sanity check for a duplicate call
-        if self._body_parsing_started:
+        if self._request_body_parsed:
             return
 
         #if header not parsed already
         #if parse_request_body is called, then it means
         #that we're retaining the request header data but
         #reparsing only the body
-        if not self._parsing_started:
+        if not self._request_header_parsed:
             self._mark_post_parse_error()
             raise RequestHeaderParseException("Request header not parsed.Parse request header first.")
 
@@ -521,7 +521,7 @@ class HttpRequest(object):
             or self.content_type == 'application/json':
             self._body = self.body().decode(self.encoding)
         
-        self._body_parsing_started = True
+        self._request_body_parsed = True
         self.POST = self._post
         self.FILES = self._files
         return
@@ -539,13 +539,13 @@ class HttpRequest(object):
     # request.body, self._stream points to a BytesIO instance
     # containing that data.
 
-    def read(self, *args, **kwargs):        
+    def read(self, *args, **kwargs):
         try:
             return self._stream.read(*args, **kwargs)
         except IOError as e:
             raise_(UnreadablePostError(*e.args), e)
 
-    def readline(self, *args, **kwargs):        
+    def readline(self, *args, **kwargs):
         try:
             return self._stream.readline(*args, **kwargs)
         except IOError as e:
