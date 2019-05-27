@@ -23,7 +23,6 @@ from six import reraise as raise_
 RAISE_ERROR = object()
 #validates a given string for a format of the form host:port
 host_validation_re = re.compile(r"^([a-z0-9.-]+|\[[a-f0-9]*:[a-f0-9\.:]+\])(:\d+)?$")
-settings = Settings.default()
 
 class UnreadablePostError(IOError):
     pass
@@ -56,25 +55,30 @@ class NoHostFoundException(Exception):
     """
     pass
 
-class HttpRequest(object):
+class HttpRequest(object,):
     """A basic HTTP request."""
 
-    # The encoding used in GET/POST dicts. None means use default setting.
-    _encoding = settings.DEFAULT_CHARSET
-    _upload_handlers = []
-
-    def __init__(self, request_stream=None):
+    def __init__(self, request_stream=None, settings=None):
         self._stream = request_stream
         #create a LazyStream out of the _stream
         if self._stream is None:
             self._stream = BytesIO()
         self._stream = LazyStream(self._stream)
 
+        #take care of settings to use default settings
+        if settings:
+            self.settings = settings
+        else:
+            self.settings = Settings.default()
+
+        #initialize the upload_hanldlers
+        self._initialize_handlers()
+
         #Parsing status flags
         self._request_header_parsed = False
         self._request_body_parsed = False
     
-        self.POST = QueryDict(mutable=True)
+        self.POST = QueryDict(self.settings, mutable=True)
         self.FILES = MultiValueDict()
 
         self._re_init()
@@ -84,7 +88,7 @@ class HttpRequest(object):
         Helper method to init/reinit an object.
         """
         
-        self.GET = QueryDict(mutable=True)
+        self.GET = QueryDict(self.settings, mutable=True)
         self.META = {}
 
         #represents a set of properties of an HTTP request
@@ -179,7 +183,7 @@ class HttpRequest(object):
 
     @property
     def encoding(self):
-        return self._encoding
+        return self.settings.DEFAULT_CHARSET
 
     @encoding.setter
     def encoding(self, val):
@@ -191,7 +195,7 @@ class HttpRequest(object):
         #DONE: Need to check when the GET/POST dictonary is redone?
         #ANSWER: They're redone whenever parse_request_header and parse_request_body
         #are called
-        self._encoding = val
+        self.settings.DEFAULT_CHARSET = val
         if hasattr(self, 'GET'):
             del self.GET
         if hasattr(self, '_post'):
@@ -259,7 +263,7 @@ class HttpRequest(object):
             del self._body
         
         #re-init POST and FILES
-        self.POST = QueryDict(mutable=True)
+        self.POST = QueryDict(self.settings, mutable=True)
         self.FILES = MultiValueDict()
 
         #reset the body parsing flag
@@ -316,7 +320,7 @@ class HttpRequest(object):
         settings.FILE_UPLOAD_HANDLERS
         """
         self._upload_handlers = [uploadhandler.load_handler(handler, self)
-                                 for handler in Settings.FILE_UPLOAD_HANDLERS]
+                                 for handler in self.settings.FILE_UPLOAD_HANDLERS]
 
     @property
     def upload_handlers(self):
@@ -342,7 +346,7 @@ class HttpRequest(object):
 
     def _parse_file_upload(self, META, post_data):
         """Return a tuple of (POST QueryDict, FILES MultiValueDict)."""
-        parser = MultiPartParser(META, post_data, self.upload_handlers, self.encoding)        
+        parser = MultiPartParser(META, post_data, self.upload_handlers, self.settings ,self.encoding)        
         return parser.parse()
     
     def body(self):
@@ -360,8 +364,8 @@ class HttpRequest(object):
             # Limit the maximum request data size that will be handled in-memory.
             #TODO: Figure out a way to do BufferedReading when in-memory body parsing is not possible
             #QUESTION: How/where is this used - is the self.read() used based on this?
-            if (settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None and
-                    int(self.META.get('CONTENT_LENGTH') or 0) > settings.DATA_UPLOAD_MAX_MEMORY_SIZE):
+            if (self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None and
+                    int(self.META.get('CONTENT_LENGTH') or 0) > self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE):
                 raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
 
             try:
@@ -394,7 +398,7 @@ class HttpRequest(object):
         #read until we find a '\r\n\r\n' sequence
         request_header_end = -1
         while request_header_end == -1:
-            chunk = request_header_stream.read(settings.MAX_HEADER_SIZE)
+            chunk = request_header_stream.read(self.settings.MAX_HEADER_SIZE)
             self._request_header_parsed = True
             if not chunk:
                 break
@@ -462,12 +466,12 @@ class HttpRequest(object):
                 break
 
         self.META[MetaDict.Info.QUERY_STRING] = meta_dict[MetaDict.ReqLine.QUERY_STRING]
-        self.GET = QueryDict(self.META[MetaDict.ReqLine.QUERY_STRING]) if self.META[MetaDict.ReqLine.QUERY_STRING] else QueryDict(mutable=True)
+        self.GET = QueryDict(self.settings, self.META[MetaDict.ReqLine.QUERY_STRING]) if self.META[MetaDict.ReqLine.QUERY_STRING] else QueryDict(self.settings, mutable=True)
         #Add a immutable version of request_headers dictionary into META dictionary
         self.META[MetaDict.Info.REQ_HEADERS] = ImmutableMultiValueDict(request_headers)
 
     def _mark_post_parse_error(self):
-        self._post = QueryDict()
+        self._post = QueryDict(self.settings)
         self._files = MultiValueDict()
 
     def parse_request_body(self):
@@ -493,7 +497,7 @@ class HttpRequest(object):
 
         #check if the body is empty
         if not data:
-            self._post, self._files = QueryDict(encoding=self._encoding), MultiValueDict()
+            self._post, self._files = QueryDict(self.settings, encoding=self.encoding), MultiValueDict()
             return
         body_stream.unget(data)
         
@@ -511,10 +515,10 @@ class HttpRequest(object):
         elif self.content_type == 'application/x-www-form-urlencoded':
             #if the content-type is of form-urlencoded, then all we need to do is to parse the body
             #as a key-value pair. This gives our _post and an empty _files of MultiValueDict
-            self._post, self._files = QueryDict(self.body(), encoding=self._encoding), MultiValueDict()
+            self._post, self._files = QueryDict(self.settings, self.body(), encoding=self.encoding), MultiValueDict()
         #for any other CONTENT_TYPE, an empty QueryDict for _post and empty MultiValueDict for _files
         else:
-            self._post, self._files = QueryDict(encoding=self._encoding), MultiValueDict()
+            self._post, self._files = QueryDict(self.settings, encoding=self.encoding), MultiValueDict()
         
         #restart content-type check
         if self.content_type == 'text/plain' or self.content_type == 'text/html'\
@@ -589,13 +593,14 @@ class QueryDict(MultiValueDict):
     _mutable = True
     _encoding = None
 
-    def __init__(self, query_string=None, mutable=False, encoding=None):
+    def __init__(self, settings, query_string=None, mutable=False, encoding=None):
         super(QueryDict, self).__init__()
-        self.encoding = encoding or settings.DEFAULT_CHARSET
+        self.settings = settings
+        self.encoding = self.settings.DEFAULT_CHARSET
         query_string = query_string or ''
         parse_qsl_kwargs = {
             'keep_blank_values': True,
-            'fields_limit': settings.DATA_UPLOAD_MAX_NUMBER_FIELDS,
+            'fields_limit': self.settings.DATA_UPLOAD_MAX_NUMBER_FIELDS,
             'encoding': self.encoding,
         }
         
@@ -629,7 +634,7 @@ class QueryDict(MultiValueDict):
     @property
     def encoding(self):
         if self._encoding is None:
-            self._encoding = settings.DEFAULT_CHARSET
+            self._encoding = self.settings.DEFAULT_CHARSET
         return self._encoding
 
     @encoding.setter

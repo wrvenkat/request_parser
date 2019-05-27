@@ -25,8 +25,6 @@ from request_parser.utils.datastructures import LazyStream, ChunkIter
 
 __all__ = ('MultiPartParser', 'MultiPartParserError', 'InputStreamExhausted')
 
-settings = Settings.default()
-
 class MultiPartParserError(Exception):
     pass
 
@@ -41,7 +39,7 @@ class MultiPartParser:
     ``MultiValueDict.parse()`` reads the input stream in ``chunk_size`` chunks
     and returns a tuple of ``(MultiValueDict(POST), MultiValueDict(FILES))``.
     """
-    def __init__(self, META, input_data, upload_handlers, encoding=None):
+    def __init__(self, META, input_data, upload_handlers, settings, encoding=None):
         """
         Initialize the MultiPartParser object.
 
@@ -55,6 +53,8 @@ class MultiPartParser:
         :encoding:
             The encoding with which to treat the incoming data.
         """
+        self.settings = settings
+
         # Content-Type should contain multipart and the boundary information.
         content_type = META.get('Content-Type', '')
         if not content_type.startswith('multipart/'):
@@ -88,7 +88,7 @@ class MultiPartParser:
         self._chunk_size = min([2 ** 31 - 4] + possible_sizes)
 
         self._meta = META
-        self._encoding = encoding or settings.DEFAULT_CHARSET
+        self._encoding = encoding or self.settings.DEFAULT_CHARSET
         self._content_length = content_length
         self._upload_handlers = upload_handlers
 
@@ -107,7 +107,7 @@ class MultiPartParser:
         # HTTP spec says that Content-Length >= 0 is valid
         # handling content-length == 0 before continuing
         if self._content_length == 0:
-            return QueryDict(encoding=self._encoding), MultiValueDict()
+            return QueryDict(self.settings, encoding=self._encoding), MultiValueDict()
 
         # See if any of the handlers take care of the parsing.
         # This allows overriding everything if need be.
@@ -117,6 +117,7 @@ class MultiPartParser:
                 self._meta,
                 self._content_length,
                 self._boundary,
+                self.settings,
                 encoding,
             )
             # Check to see if it was handled
@@ -128,7 +129,7 @@ class MultiPartParser:
                 return result[0], result[1]
 
         # Create the data structures to be used later.
-        self._post = QueryDict(mutable=True)
+        self._post = QueryDict(self.settings, mutable=True)
         self._files = MultiValueDict()
 
         # Instantiate the stream:
@@ -168,16 +169,16 @@ class MultiPartParser:
                 if item_type == FIELD:
                     # Avoid storing more than DATA_UPLOAD_MAX_NUMBER_FIELDS.
                     num_post_keys += 1
-                    if (settings.DATA_UPLOAD_MAX_NUMBER_FIELDS is not None and
-                            settings.DATA_UPLOAD_MAX_NUMBER_FIELDS < num_post_keys):
+                    if (self.settings.DATA_UPLOAD_MAX_NUMBER_FIELDS is not None and
+                            self.settings.DATA_UPLOAD_MAX_NUMBER_FIELDS < num_post_keys):
                         raise TooManyFieldsSent(
                             'The number of GET/POST parameters exceeded '
                             'settings.DATA_UPLOAD_MAX_NUMBER_FIELDS.'
                         )
 
                     # Avoid reading more than DATA_UPLOAD_MAX_MEMORY_SIZE.                    
-                    if settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None:
-                        read_size = settings.DATA_UPLOAD_MAX_MEMORY_SIZE - num_bytes_read
+                    if self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None:
+                        read_size = self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE - num_bytes_read
 
                     # This is a post field, we can just set it in the post
                     if transfer_encoding == 'base64':
@@ -198,8 +199,8 @@ class MultiPartParser:
                     #QUESTION: We can't implement buffered reading if we
                     #have only read part of a stream. Can we?
                     num_bytes_read += len(field_name) + 2
-                    if (settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None and
-                            num_bytes_read > settings.DATA_UPLOAD_MAX_MEMORY_SIZE):
+                    if (self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None and
+                            num_bytes_read > self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE):
                         raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
 
                     force_text(data, encoding, errors='replace')

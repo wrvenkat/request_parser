@@ -4,7 +4,7 @@ Base file upload handler classes, and the built-in concrete subclasses
 
 from io import BytesIO
 
-from request_parser.conf.settings import Settings as settings
+from request_parser.conf.settings import Settings
 from request_parser.files.uploadedfile import (
     InMemoryUploadedFile, TemporaryUploadedFile,
 )
@@ -72,7 +72,7 @@ class FileUploadHandler:
         self.content_type_extra = None
         self.request = request
 
-    def handle_raw_input(self, input_data, META, content_length, boundary, encoding=None):
+    def handle_raw_input(self, input_data, META, content_length, boundary, settings, encoding=None):
         """
         Handle the raw input from the client.
 
@@ -158,7 +158,7 @@ class MemoryFileUploadHandler(FileUploadHandler, object):
     File upload handler to stream uploads into memory (used for small files).
     """
 
-    def handle_raw_input(self, input_data, META, content_length, boundary, encoding=None):
+    def handle_raw_input(self, input_data, META, content_length, boundary, settings, encoding=None):
         """
         Use the content_length to signal whether or not this handler should be
         used.
