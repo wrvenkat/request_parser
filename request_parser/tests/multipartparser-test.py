@@ -2,6 +2,7 @@ import os, inspect
 
 from request_parser.http.multipartparser import MultiPartParser
 from request_parser.files import uploadhandler
+from request_parser.conf.settings import Settings
 
 def test1():    
     settings_upload_handlers = [
@@ -32,7 +33,7 @@ def test1():
 
     with open(test_file1, 'r') as stream1:
         try:
-            multipartparser_1 = MultiPartParser(META, stream1, upload_handlers)
+            multipartparser_1 = MultiPartParser(META, stream1, upload_handlers, Settings.default())
             post, files = multipartparser_1.parse()
             print "Done parsing!"
         except Exception as e:
