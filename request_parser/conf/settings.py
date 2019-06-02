@@ -44,10 +44,9 @@ class Settings:
         #FILE_UPLOAD_DIR
         if Settings.Key.FILE_UPLOAD_DIR in settings_dict:
                 self.FILE_UPLOAD_TEMP_DIR = settings_dict[Settings.Key.FILE_UPLOAD_DIR]
+                self.FILE_UPLOAD_TEMP_DIR = self._check_upload_dir()
         else:
             self.FILE_UPLOAD_TEMP_DIR = default_settings.FILE_UPLOAD_TEMP_DIR
-
-        self.FILE_UPLOAD_TEMP_DIR = self._check_upload_dir()
 
         #MAX_HEADER_SIZE
         if Settings.Key.MAX_HEADER_SIZE in settings_dict:
@@ -130,7 +129,7 @@ class Settings:
             test_file.write("Permissions Check!")
             test_file.close()
             remove(test_file_path)
-            return test_file_path
+            return file_upload_dir
         except IOError as ioError:
             if ioError.errno == errno.EACCES:
                 raise InvalidDirectory("No write permissions to directory: {}".format(file_upload_dir))
