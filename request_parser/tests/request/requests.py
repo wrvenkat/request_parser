@@ -2,12 +2,13 @@ from io import BytesIO
 from itertools import chain
 import base64
 import unittest
+from os.path import join
 
 from future.backports.urllib.parse import urlencode, quote
 
 from request_parser.http.request import HttpRequest, RawPostDataException, UnreadablePostError, split_domain_port
 from request_parser.http.multipartparser import MultiPartParserError
-from request_parser.tests import testutils
+from request_parser.files.utils import get_abs_path
 from request_parser.http.constants import MetaDict
 from request_parser.utils.encoding import iri_to_uri, uri_to_iri
 from request_parser.http.request import InvalidHttpRequest, parse_request_headers
@@ -81,11 +82,11 @@ class RequestHeaderTests(unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
-        test_files_dir = "request parse test files"
-        cls.test_files_dir = testutils.get_abs_path(test_files_dir)
+        test_files_dir = "tests/request parse test files"
+        cls.test_files_dir = get_abs_path(test_files_dir)
 
         request_file = "complex-request1.txt"
-        cls.request_file = cls.test_files_dir + request_file
+        cls.request_file = join(cls.test_files_dir, request_file)
     
     def test_http_headers_post_header_parse(self):
         """
@@ -176,16 +177,16 @@ class RequestHeaderTests(unittest.TestCase):
         cases.
         """
         #charset/encoding reset test
-        encoded_body_dir = "request parse test files/encoded body"
-        encoded_body_dir = testutils.get_abs_path(encoded_body_dir)
+        encoded_body_dir = "tests/request parse test files/encoded body"
+        encoded_body_dir = get_abs_path(encoded_body_dir)
 
         iso_88591_1_file = "ISO-8859-1-Barca.txt"
         utf8_file = "UTF8-Barca.txt"
         utf16_BEBOM_file = "UTF16 BEBOM-Barca.txt"
 
-        iso_88591_1_file = encoded_body_dir + iso_88591_1_file
-        utf8_file = encoded_body_dir + utf8_file
-        utf16_BEBOM_file = encoded_body_dir + utf16_BEBOM_file
+        iso_88591_1_file = join(encoded_body_dir, iso_88591_1_file)
+        utf8_file = join(encoded_body_dir, utf8_file)
+        utf16_BEBOM_file = join(encoded_body_dir, utf16_BEBOM_file)
 
         iso_88591_1_encoding = "ISO-8859-1"
         utf8_encoding = "UTF-8"
@@ -269,7 +270,7 @@ class RequestHeaderTests(unittest.TestCase):
 
         #another request file
         another_test_file = "get-request1.txt"
-        another_test_file = self.test_files_dir + another_test_file
+        another_test_file = join(self.test_files_dir, another_test_file)
         another_test_file_stream = open(another_test_file, 'r')
         http_request.stream = another_test_file_stream
 
@@ -296,20 +297,20 @@ class RequestTests(unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
-        test_files_dir = "request parse test files"
-        test_files_dir = testutils.get_abs_path(test_files_dir)
+        test_files_dir = "tests/request parse test files"
+        test_files_dir = get_abs_path(test_files_dir)
         
         #GET request
         get_request_with_query_file = "get-request-with-query-string.txt"
-        cls.get_request_with_query = test_files_dir + get_request_with_query_file
+        cls.get_request_with_query = join(test_files_dir, get_request_with_query_file)
 
         #POST request
         post_request_with_query_file = "post-request-with-query.txt"
-        cls.post_request_with_query_file = test_files_dir + post_request_with_query_file
+        cls.post_request_with_query_file = join(test_files_dir, post_request_with_query_file)
 
         #PUT request with multipart-form-data
         put_request_multipart_file = "complex-request1.txt"
-        cls.put_request_multipart_file = test_files_dir + put_request_multipart_file
+        cls.put_request_multipart_file = join(test_files_dir, put_request_multipart_file)
 
     def test_request_query_string(self):
         #get file stream
