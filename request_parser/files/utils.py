@@ -1,3 +1,6 @@
+from os.path import isabs, dirname, abspath, isdir, join, normpath
+import inspect
+
 class FileProxyMixin:
     """
     A mixin class used to forward file methods to an underlaying file
@@ -50,3 +53,23 @@ class FileProxyMixin:
 
     def __iter__(self):
         return iter(self.file)
+
+def get_abs_path(*dirs):
+    """
+    Return absolute path of current directory with root path being the request_parser module name.
+    """
+    #for relative path
+    curr_filename = inspect.getframeinfo(inspect.currentframe()).filename
+    curr_path = dirname(abspath(curr_filename))
+    previous_path = join(curr_path, "../")
+    previous_path = normpath(previous_path)
+    curr_path = previous_path
+
+    if dirs:
+        for dir in dirs:
+            curr_path = join(curr_path, dir)
+    curr_path = join(curr_path,"")
+    curr_path = normpath(curr_path)
+
+    #return the current dir if it's a directory
+    return curr_path
