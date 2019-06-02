@@ -47,7 +47,7 @@ class Settings:
         else:
             self.FILE_UPLOAD_TEMP_DIR = default_settings.FILE_UPLOAD_TEMP_DIR
 
-        self._check_upload_dir()
+        self.FILE_UPLOAD_TEMP_DIR = self._check_upload_dir()
 
         #MAX_HEADER_SIZE
         if Settings.Key.MAX_HEADER_SIZE in settings_dict:
@@ -101,7 +101,7 @@ class Settings:
         #Default charset per HTTP 1.1 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
         settings.DEFAULT_CHARSET = 'ISO-8859-1'
         
-        settings._check_upload_dir()
+        settings.FILE_UPLOAD_TEMP_DIR = settings._check_upload_dir()
 
         return settings
 
@@ -130,6 +130,7 @@ class Settings:
             test_file.write("Permissions Check!")
             test_file.close()
             remove(test_file_path)
+            return test_file_path
         except IOError as ioError:
             if ioError.errno == errno.EACCES:
                 raise InvalidDirectory("No write permissions to directory: {}".format(file_upload_dir))
