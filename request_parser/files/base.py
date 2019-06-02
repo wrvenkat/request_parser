@@ -25,7 +25,7 @@ class File(FileProxyMixin):
         return bool(self.name)
 
     def __len__(self):
-        return self.size
+        return int(self.size)
 
     #@cached_property
     def size(self):
