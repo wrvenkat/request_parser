@@ -1,3 +1,15 @@
+from os.path import normpath, isdir, join, isabs
+from os import errno, mkdir, remove
+from request_parser.files.utils import get_abs_path
+
+class InvalidDirectory(Exception):
+    """
+    Raised when get_abs_path fails to get a proper directory
+    from the provided string.
+    """
+    
+    def __init__(self, message, code=None, params=None):
+        super(InvalidDirectory, self).__init__(message, code, params)
 
 class Settings:
     """Setting used to configure the parser"""
@@ -35,6 +47,8 @@ class Settings:
         else:
             self.FILE_UPLOAD_TEMP_DIR = default_settings.FILE_UPLOAD_TEMP_DIR
 
+        self._check_upload_dir()
+
         #MAX_HEADER_SIZE
         if Settings.Key.MAX_HEADER_SIZE in settings_dict:
             self.MAX_HEADER_SIZE = settings_dict[Settings.Key.MAX_HEADER_SIZE]
@@ -70,7 +84,7 @@ class Settings:
         settings = Settings()
 
         #Directory where file upload files will be stored
-        settings.FILE_UPLOAD_TEMP_DIR = 'file_uploads'
+        settings.FILE_UPLOAD_TEMP_DIR = 'files/file_uploads'
 
         #max header size of a header
         settings.MAX_HEADER_SIZE = 16
@@ -87,4 +101,37 @@ class Settings:
         #Default charset per HTTP 1.1 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
         settings.DEFAULT_CHARSET = 'ISO-8859-1'
         
+        settings._check_upload_dir()
+
         return settings
+
+    def _check_upload_dir(self):
+        """
+        Method that canonicalizes the FILE_UPLOAD_DIR if required and checks for permission issues.
+        """
+        file_upload_dir = self.FILE_UPLOAD_TEMP_DIR
+        file_upload_dir = normpath(file_upload_dir)
+
+        #if the provided directory path is not present(already) or
+        #if it's an absolute path
+        if not isabs(file_upload_dir) or not isdir(file_upload_dir):
+            #try to get a directory path with
+            #FILE_UPLOAD_TEMP_DIR in the path
+            file_upload_dir = get_abs_path(file_upload_dir)
+        
+        #check permission for creating directory and writing files
+        try:
+            #check if directory exists if not create
+            if not isdir(file_upload_dir):
+                mkdir(file_upload_dir)
+                        
+            test_file_path = join(file_upload_dir, "acdr423x.tmp")        
+            test_file = open(test_file_path, "w+")
+            test_file.write("Permissions Check!")
+            test_file.close()
+            remove(test_file_path)
+        except IOError as ioError:
+            if ioError.errno == errno.EACCES:
+                raise InvalidDirectory("No write permissions to directory: {}".format(file_upload_dir))
+            else:
+                raise InvalidDirectory("Error: Invalid directory: {}".format(file_upload_dir))
