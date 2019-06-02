@@ -1,11 +1,25 @@
 import unittest
-from request_parser.conf.settings import Settings
+from platform import system
+from request_parser.conf.settings import Settings, InvalidDirectory
 
 class SettingsTests(unittest.TestCase):
     def test_invalid_arg_init(self):
         settings = Settings("Test")
         self.assertFalse(hasattr(settings, "FILE_UPLOAD_TEMP_DIR"))
 
+    def test_file_upload_directory(self):
+        settings = Settings.default()
+        self.assertIn("files/file_uploads", settings.FILE_UPLOAD_TEMP_DIR)
+
+        #if it's Linux or Mac
+        if system() == 'Linux' or system() == 'Darwin':
+            with self.assertRaises(InvalidDirectory) as invalidDir_Exception:
+                settings = Settings({Settings.Key.FILE_UPLOAD_DIR : "/etc/"})
+            self.assertEquals("No write permissions to directory: /etc", invalidDir_Exception.exception.args[0])
+        
+        if system() == 'Windows':
+            settings = Settings({Settings.Key.FILE_UPLOAD_DIR : "C:/Program Files"})
+    
     def test_default_settings(self):
         default_setting = Settings.default()
 
@@ -17,7 +31,7 @@ class SettingsTests(unittest.TestCase):
         self.assertTrue(hasattr(default_setting, "DEFAULT_CHARSET"))
 
         #confirm the values
-        self.assertEqual('file_uploads', default_setting.FILE_UPLOAD_TEMP_DIR)
+        self.assertEqual('files/file_uploads', default_setting.FILE_UPLOAD_TEMP_DIR)
         self.assertEqual(16, default_setting.MAX_HEADER_SIZE)
         self.assertEqual(80 * ((2 ** 10) * (2 ** 10)), default_setting.FILE_UPLOAD_MAX_MEMORY_SIZE)
         self.assertEqual(100 * ((2 ** 10) * (2 ** 10)), default_setting.DATA_UPLOAD_MAX_MEMORY_SIZE)
