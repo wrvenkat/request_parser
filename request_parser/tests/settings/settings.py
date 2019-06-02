@@ -31,7 +31,7 @@ class SettingsTests(unittest.TestCase):
         self.assertTrue(hasattr(default_setting, "DEFAULT_CHARSET"))
 
         #confirm the values
-        self.assertEqual('files/file_uploads', default_setting.FILE_UPLOAD_TEMP_DIR)
+        self.assertIn('files/file_uploads', default_setting.FILE_UPLOAD_TEMP_DIR)
         self.assertEqual(16, default_setting.MAX_HEADER_SIZE)
         self.assertEqual(80 * ((2 ** 10) * (2 ** 10)), default_setting.FILE_UPLOAD_MAX_MEMORY_SIZE)
         self.assertEqual(100 * ((2 ** 10) * (2 ** 10)), default_setting.DATA_UPLOAD_MAX_MEMORY_SIZE)
@@ -54,7 +54,7 @@ class SettingsTests(unittest.TestCase):
         self.assertTrue(hasattr(custom_setting, "DEFAULT_CHARSET"))
 
         #confirm the values
-        self.assertEqual('test_file_dir', custom_setting.FILE_UPLOAD_TEMP_DIR)
+        self.assertIn('test_file_dir', custom_setting.FILE_UPLOAD_TEMP_DIR)
         self.assertEqual(16, custom_setting.MAX_HEADER_SIZE)
         self.assertEqual(10 * ((2 ** 10) * (2 ** 10)), custom_setting.FILE_UPLOAD_MAX_MEMORY_SIZE)
         self.assertEqual(100 * ((2 ** 10) * (2 ** 10)), custom_setting.DATA_UPLOAD_MAX_MEMORY_SIZE)
