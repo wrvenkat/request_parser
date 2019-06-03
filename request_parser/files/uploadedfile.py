@@ -5,12 +5,11 @@ Classes representing uploaded files.
 import os
 from io import BytesIO
 
-from request_parser.conf.settings import Settings as settings
+from request_parser.conf.settings import Settings
 from request_parser.files import temp as tempfile
 from request_parser.files.base import File
 
 __all__ = ('UploadedFile', 'TemporaryUploadedFile', 'InMemoryUploadedFile', 'SimpleUploadedFile')
-
 
 class UploadedFile(File, object):
     """
@@ -55,7 +54,7 @@ class TemporaryUploadedFile(UploadedFile, object):
     """
     A file uploaded to a temporary location (i.e. stream-to-disk).
     """
-    def __init__(self, name, content_type, size, charset, content_type_extra=None):
+    def __init__(self, name, content_type, size, charset, settings = Settings.default(), content_type_extra=None):
         _, ext = os.path.splitext(name)
         file = tempfile.NamedTemporaryFile(suffix='.upload' + ext, dir=settings.FILE_UPLOAD_TEMP_DIR)
         super(TemporaryUploadedFile, self).__init__(file, name, content_type, size, charset, content_type_extra)
