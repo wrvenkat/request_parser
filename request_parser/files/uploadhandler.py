@@ -3,8 +3,6 @@ Base file upload handler classes, and the built-in concrete subclasses
 """
 
 from io import BytesIO
-
-from request_parser.conf.settings import Settings
 from request_parser.files.uploadedfile import (
     InMemoryUploadedFile, TemporaryUploadedFile,
 )
@@ -135,14 +133,18 @@ class TemporaryFileUploadHandler(FileUploadHandler, object):
 
     #QUESTION: There's no handle_raw_input(). Then how's a file upload handled that's
     #not in-memory?
+    #ANSWER: handlr_raw_input() is not what is used to handle streaming into a temp file. That
+    #would be receive_data_chunk().
 
+    def handle_raw_input(self, input_data, META, content_length, boundary, settings, encoding=None):
+        self.settings = settings
 
     def new_file(self, *args, **kwargs):
         """
         Create the file object to append to as data is coming in.
         """
         super(TemporaryFileUploadHandler, self).new_file(*args, **kwargs)
-        self.file = TemporaryUploadedFile(self.file_name, self.content_type, 0, self.charset, self.content_type_extra)
+        self.file = TemporaryUploadedFile(self.file_name, self.content_type, 0, self.charset, self.settings, self.content_type_extra)
 
     def receive_data_chunk(self, raw_data, start):
         self.file.write(raw_data)
@@ -195,6 +197,75 @@ class MemoryFileUploadHandler(FileUploadHandler, object):
             charset=self.charset,
             content_type_extra=self.content_type_extra
         )
+
+
+class ConvenientFileUploadHandler(object):
+    """
+    A wrapper class that conveniently switches to TemporaryFileUploadHandler from MemoryFileUploadHandler
+    when the size of content read exceeds settings.FILE_UPLOAD_MAX_MEMORY_SIZE.
+
+    It's easier to compose the functionality of TemporaryFileUploadHandler and MoemoryFileUploadHandler
+    by /using/ either of them instead of inheriting them.
+
+    It's also easier to implement the functionalities this way while maintaining API compatibility.
+    """
+
+    def __init__(self, request=None):
+        self._request = request
+        self._handler = MemoryFileUploadHandler(request)
+        self._received_data_size = 0
+        self._switched_to_temp_file = False
+    
+    def handle_raw_input(self, input_data, META, content_length, boundary, settings, encoding=None):
+        #We grab the settings object and call the handler's handle_raw_input to activate it.
+        self._settings = settings
+        
+        #we pass the content_length arg to 0 so that the MemoryFileUploadHandler can be activated
+        self._handler.handle_raw_input(input_data, META, 0, boundary, settings, encoding)
+    
+    def new_file(self, *args, **kwargs):
+        self._handler.new_file(*args, **kwargs)
+    
+    def receive_data_chunk(self, raw_data, start):
+        current_data_size = len(raw_data)
+        
+        #check if switching to temp file is required
+        if not self._switched_to_temp_file and\
+        self._received_data_size + current_data_size > self._settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
+            #signal close of file_upload to current handler and
+            #get a InMemoryUploadedFile object
+            current_content_file = self.file_complete(self._received_data_size)
+            content = current_content_file.read()
+
+            #create a new temporary file now that the max size for in-memory
+            #handling has exceeded
+            temp_upload_handler = TemporaryFileUploadHandler(self._request)
+
+            #activate it
+            temp_upload_handler.handle_raw_input(None, None, 0, None, self._settings)
+
+            #create a new file
+            temp_upload_handler.new_file(self._handler.field_name, self._handler.file_name, self._handler.content_type, 0, self._handler.charset, self._handler.content_type_extra)
+
+            #stream all of the read data into the temp file
+            temp_upload_handler.receive_data_chunk(content, 0)
+
+            #reset the current file handler
+            self._handler = temp_upload_handler
+
+            #flag that we've switched to temp file
+            self._switched_to_temp_file = True
+        
+        #stream the raw into the current handle
+        self._handler.receive_data_chunk(raw_data, start)
+
+        self._received_data_size += current_data_size
+    
+    def file_complete(self, file_size):
+        return self._handler.file_complete(file_size)
+
+    def upload_complete(self):
+        self._handler.upload_complete()
 
 
 def load_handler(path, *args, **kwargs):
