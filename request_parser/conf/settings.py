@@ -30,9 +30,13 @@ class Settings:
     #requires to work properly while others can be added
     FILE_UPLOAD_HANDLERS = [
         #hold uploaded files in-memory
-        'request_parser.files.uploadhandler.MemoryFileUploadHandler',
+        #'request_parser.files.uploadhandler.MemoryFileUploadHandler',
         #hold uploaded files in a temp file
-        'request_parser.files.uploadhandler.TemporaryFileUploadHandler',
+        #'request_parser.files.uploadhandler.TemporaryFileUploadHandler',
+
+        #File upload handler that's convenient to handle file uploads that are
+        #large and small
+        'request_parser.files.uploadhandler.ConvenientFileUploadHandler',
     ]
 
     def __init__(self, settings_dict=None):
