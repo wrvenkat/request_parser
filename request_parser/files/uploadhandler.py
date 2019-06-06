@@ -199,7 +199,7 @@ class MemoryFileUploadHandler(FileUploadHandler, object):
         )
 
 
-class ConvenientFileUploadHandler(object):
+class ConvenientFileUploadHandler(FileUploadHandler, object):
     """
     A wrapper class that conveniently switches to TemporaryFileUploadHandler from MemoryFileUploadHandler
     when the size of content read exceeds settings.FILE_UPLOAD_MAX_MEMORY_SIZE.
