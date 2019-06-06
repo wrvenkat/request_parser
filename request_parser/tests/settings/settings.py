@@ -36,8 +36,8 @@ class SettingsTests(unittest.TestCase):
         #confirm the values
         self.assertIn('files/file_uploads', default_setting.FILE_UPLOAD_TEMP_DIR)
         self.assertEqual(16, default_setting.MAX_HEADER_SIZE)
-        self.assertEqual(80 * ((2 ** 10) * (2 ** 10)), default_setting.FILE_UPLOAD_MAX_MEMORY_SIZE)
-        self.assertEqual(100 * ((2 ** 10) * (2 ** 10)), default_setting.DATA_UPLOAD_MAX_MEMORY_SIZE)
+        self.assertEqual(30 * ((2 ** 10) * (2 ** 10)), default_setting.FILE_UPLOAD_MAX_MEMORY_SIZE)
+        self.assertEqual(5 * ((2 ** 10) * (2 ** 10)), default_setting.DATA_UPLOAD_MAX_MEMORY_SIZE)
         self.assertEqual(4096, default_setting.DATA_UPLOAD_MAX_NUMBER_FIELDS)
         self.assertEqual('ISO-8859-1', default_setting.DEFAULT_CHARSET)
     
@@ -61,7 +61,7 @@ class SettingsTests(unittest.TestCase):
         self.assertIn('test_file_dir', custom_setting.FILE_UPLOAD_TEMP_DIR)
         self.assertEqual(16, custom_setting.MAX_HEADER_SIZE)
         self.assertEqual(10 * ((2 ** 10) * (2 ** 10)), custom_setting.FILE_UPLOAD_MAX_MEMORY_SIZE)
-        self.assertEqual(100 * ((2 ** 10) * (2 ** 10)), custom_setting.DATA_UPLOAD_MAX_MEMORY_SIZE)
+        self.assertEqual(5 * ((2 ** 10) * (2 ** 10)), custom_setting.DATA_UPLOAD_MAX_MEMORY_SIZE)
         self.assertEqual(4096, custom_setting.DATA_UPLOAD_MAX_NUMBER_FIELDS)
         self.assertEqual('ISO-8859-1', custom_setting.DEFAULT_CHARSET)
 
