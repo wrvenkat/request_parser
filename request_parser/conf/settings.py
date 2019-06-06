@@ -83,18 +83,24 @@ class Settings:
         settings = Settings()
 
         #Directory where file upload files will be stored
+        #default directory is relative to the module.
         settings.FILE_UPLOAD_TEMP_DIR = 'files/file_uploads'
 
         #max header size of a header
         settings.MAX_HEADER_SIZE = 16
 
-        #Default max size of uploaded file is 80MB
-        settings.FILE_UPLOAD_MAX_MEMORY_SIZE = 80 * ((2 ** 10) * (2 ** 10))
+        # Maximum size, in bytes, of a request before it will be streamed to the
+        # file system instead of into memory.
+        #default value is 30 MB
+        settings.FILE_UPLOAD_MAX_MEMORY_SIZE = 30 * ((2 ** 10) * (2 ** 10))
+        
+        # Maximum size in bytes of request data (excluding file uploads) that will be
+        # read before a SuspiciousOperation (RequestDataTooBig) is raised.
+        #default is 5 MB
+        settings.DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * ((2 ** 10) * (2 ** 10))
 
-        #max memory size reserved for in-memory file handling
-        #default is 100 MB
-        settings.DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * ((2 ** 10) * (2 ** 10))
-
+        # Maximum number of GET/POST parameters that will be read before a
+        # SuspiciousOperation (TooManyFieldsSent) is raised.
         settings.DATA_UPLOAD_MAX_NUMBER_FIELDS = 4096
 
         #Default charset per HTTP 1.1 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1

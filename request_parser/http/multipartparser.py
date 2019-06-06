@@ -176,7 +176,7 @@ class MultiPartParser:
                             'settings.DATA_UPLOAD_MAX_NUMBER_FIELDS.'
                         )
 
-                    # Avoid reading more than DATA_UPLOAD_MAX_MEMORY_SIZE.                    
+                    # Avoid reading more than DATA_UPLOAD_MAX_MEMORY_SIZE.
                     if self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None:
                         read_size = self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE - num_bytes_read
 
