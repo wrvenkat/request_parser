@@ -69,10 +69,7 @@ class HttpRequest(object,):
         if settings:
             self.settings = settings
         else:
-            self.settings = Settings.default()
-
-        #initialize the upload_hanldlers
-        self._initialize_handlers()
+            self.settings = Settings.default()        
 
         #Parsing status flags
         self._request_header_parsed = False
@@ -482,6 +479,9 @@ class HttpRequest(object,):
         #sanity check for a duplicate call
         if self._request_body_parsed:
             return
+        
+        #initialize the upload_hanldlers
+        self._initialize_handlers()
 
         #if header not parsed already
         #if parse_request_body is called, then it means
