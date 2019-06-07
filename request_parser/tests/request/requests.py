@@ -13,6 +13,8 @@ from request_parser.http.constants import MetaDict
 from request_parser.utils.encoding import iri_to_uri, uri_to_iri
 from request_parser.http.request import InvalidHttpRequest, parse_request_headers
 from request_parser.http.multipartparser import MultiPartParserError
+from request_parser.conf.settings import Settings
+from request_parser.exceptions.exceptions import RequestDataTooBig
 
 class HttpRequestBasicTests(unittest.TestCase):
 
@@ -378,6 +380,44 @@ class RequestTests(unittest.TestCase):
 
         #close it out
         multipart_request_stream.close()
+
+    def test_request_data_too_big(self):
+        """
+        Tests both request.py's and multipartparser.py's RequestDataTooBig.
+        """
+
+        #text/plain test
+        multipart_request_stream = open(self.put_request_multipart_file, 'r')
+
+        #get a request handle
+        multipart_request = HttpRequest(
+                                multipart_request_stream,
+                                #setting DATA_UPLOAD MAX to be 64 bytes
+                                Settings({Settings.Key.DATA_UPLOAD_MAX_MEMORY : 64})
+                            )
+        multipart_request.parse_request_header()
+        multipart_request.content_type = "text/plain"
+        with self.assertRaises(RequestDataTooBig) as rqdTooBig_Exception:
+            multipart_request.parse_request_body()
+        self.assertEquals("Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.", rqdTooBig_Exception.exception.args[0])
+        multipart_request_stream.close()
+
+        #x-www-form-urlencoded test
+        multipart_request_stream = open(self.put_request_multipart_file, 'r')
+
+        #get a request handle
+        multipart_request = HttpRequest(
+                                multipart_request_stream,
+                                #setting DATA_UPLOAD MAX to be 64 bytes
+                                Settings({Settings.Key.DATA_UPLOAD_MAX_MEMORY : 64})
+                            )
+        multipart_request.parse_request_header()
+        multipart_request.content_type = "application/x-www-form-urlencoded"
+        with self.assertRaises(RequestDataTooBig) as rqdTooBig_Exception:
+            multipart_request.parse_request_body()
+        self.assertEquals("Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.", rqdTooBig_Exception.exception.args[0])
+        multipart_request_stream.close()
+        
 
     def test_invalid_request_header(self):
         #Incorrectly terminated request

@@ -355,23 +355,33 @@ class HttpRequest(object,):
         #returning it raw
         if self._request_body_parsed and not self.is_plain_text():
             raise RawPostDataException("You cannot access raw body after reading from request's data stream.")
-        #TODO: Once we fix the logic behind guessing request body size using Content-Length
-        #META data, we should look into removing the first check here.
+    
         elif self._request_header_parsed and not hasattr(self, '_body'):
             # Limit the maximum request data size that will be handled in-memory.
-            #TODO: Figure out a way to do BufferedReading when in-memory body parsing is not possible
+            
             #QUESTION: How/where is this used - is the self.read() used based on this?
-            if (self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None and
-                    int(self.META.get('CONTENT_LENGTH') or 0) > self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE):
-                raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
+            #ANSWER: Please see settings.py for what DATA_UPLOAD_MAX_MEMORY_SIZE is for.
 
-            try:
-                #At this point, remember that, _stream points to the start of the body
-                self._body = self.read()
+            #default chunk_size is 64KB
+            chunk_size = 64 * (2 ** 10)
+            read_size = 0
+            chunk = ''
+            _body = ''
+            try:                
+                chunk = self.read(chunk_size)
+                read_size += len(chunk)
+                while read_size <= self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE and\
+                        chunk:
+                    _body += chunk
+                    chunk = self.read(chunk_size)
+                    read_size += len(chunk)
             except IOError as e:
                 raise_(UnreadablePostError(*e.args), e)
-                #raise UnreadablePostError(*e.args) from e
-        
+            
+            if read_size > self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE:
+                raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
+            self._body = _body
+            
         elif not self._request_header_parsed:
             self.parse_request_header()
             return self.body()
@@ -523,6 +533,8 @@ class HttpRequest(object,):
         #restart content-type check
         if self.content_type == 'text/plain' or self.content_type == 'text/html'\
             or self.content_type == 'application/json':
+            self._body = self.body().decode(self.encoding)
+        else:
             self._body = self.body().decode(self.encoding)
         
         self._request_body_parsed = True
