@@ -4,8 +4,6 @@ import base64
 import unittest
 from os.path import join
 
-from future.backports.urllib.parse import urlencode, quote
-
 from request_parser.http.request import HttpRequest, RawPostDataException, UnreadablePostError, split_domain_port
 from request_parser.http.multipartparser import MultiPartParserError
 from request_parser.files.utils import get_abs_path
