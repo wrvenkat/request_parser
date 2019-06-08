@@ -1,10 +1,10 @@
 from request_parser.http.request import HttpRequest
 from request_parser.http.constants import MetaDict
-import testutils
+from request_parser.files.utils import get_abs_path
 
 def requestparser():
     curr_dir = "request parse test files"
-    curr_dir = testutils.get_abs_path(curr_dir)
+    curr_dir = get_abs_path(curr_dir)
 
     get_request1 = "get-request1.txt"
     get_request1 = curr_dir+get_request1

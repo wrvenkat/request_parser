@@ -1,11 +1,11 @@
 from request_parser.http.request import HttpRequest
 from request_parser.http.constants import MetaDict
+from request_parser.files.utils import get_abs_path
 import base64
-import testutils
 
 def requestparser():
     curr_dir = "request parse test files"
-    curr_dir = testutils.get_abs_path(curr_dir)
+    curr_dir = get_abs_path(curr_dir)
 
     put_multipart_request = "complex-request1.txt"
     put_multipart_request = curr_dir+put_multipart_request
