@@ -22,7 +22,7 @@ def requestparser():
             print "Protocol info: "+http_get_request1.protocol_info
             print "Host is: "+http_get_request1.get_host()
             print "Port is: "+http_get_request1.get_port()
-            print "Encoding is: "+http_get_request1._encoding
+            print "Encoding is: "+http_get_request1.encoding
             print "Content-Type is: "+http_get_request1.content_type
             print "Request URI is: "+http_get_request1.get_uri()
             print "GET query string dict is: "
