@@ -9,7 +9,7 @@ from request_parser.http.multipartparser import MultiPartParserError
 from request_parser.files.utils import get_abs_path
 from request_parser.http.constants import MetaDict
 from request_parser.utils.encoding import iri_to_uri, uri_to_iri
-from request_parser.http.request import InvalidHttpRequest, parse_request_headers
+from request_parser.http.request import InvalidHttpRequest, parse_request_headers, QueryDict
 from request_parser.http.multipartparser import MultiPartParserError
 from request_parser.conf.settings import Settings
 from request_parser.exceptions.exceptions import RequestDataTooBig
@@ -297,6 +297,8 @@ class RequestTests(unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
+        cls.maxDiff = None
+
         test_files_dir = "tests/request parse test files"
         test_files_dir = get_abs_path(test_files_dir)
         
@@ -319,14 +321,18 @@ class RequestTests(unittest.TestCase):
         get_request_with_query = HttpRequest(get_request_with_query_stream)
         get_request_with_query.parse_request_header()
         get_request_with_query.parse_request_body()
-        request_GET = dict()
-        request_GET['source'] = ['hp']
-        request_GET['ei'] = ['H8jpXI_lN4OiswXa-oOwAw']
-        request_GET['q'] = ['asdfadsf']
-        request_GET['oq'] = ['asdfadsf']
-        request_GET['gs_l'] = ['psy-ab.12..0j0i10l3j0j0i10l5.1255.1577..2445...0.0..1.153.972.2j6......0....1..gws-wiz.....0..0i131.DPwpRijoAMc']
+        # Use of dict() had to be changed to QueryDict() as the test seem to be failing on Jython
+        # where full repr(obj) seems to be used to perform equality of 2 dicts but for print calls
+        # only the proper doct() level repr() call is used.
+        # By using QueryDict(), we can maintain Jython compatibility
+        request_GET = QueryDict(Settings.default(), mutable=True)
+        request_GET['source'] = 'hp'
+        request_GET['ei'] = 'H8jpXI_lN4OiswXa-oOwAw'
+        request_GET['q'] = 'asdfadsf'
+        request_GET['oq'] = 'asdfadsf'
+        request_GET['gs_l'] = 'psy-ab.12..0j0i10l3j0j0i10l5.1255.1577..2445...0.0..1.153.972.2j6......0....1..gws-wiz.....0..0i131.DPwpRijoAMc'
         self.assertDictEqual(request_GET, get_request_with_query.GET)
-        self.assertDictEqual(dict(), get_request_with_query.POST)
+        self.assertDictEqual(QueryDict(Settings.default(), mutable=True), get_request_with_query.POST)
 
         #close get request
         get_request_with_query_stream.close()
@@ -337,14 +343,14 @@ class RequestTests(unittest.TestCase):
         post_request_with_query = HttpRequest(post_request_with_query_stream)
         post_request_with_query.parse_request_header()
         post_request_with_query.parse_request_body()
-        request_POST = dict()
-        request_POST['source'] = ['hp']
-        request_POST['ei'] = ['H8jpXI_lN4OiswXa-oOwAw']
-        request_POST['q'] = ['asdfadsf']
-        request_POST['oq'] = ['asdfadsf']
-        request_POST['gs_l'] = ['psy-ab.12..0j0i10l3j0j0i10l5.1255.1577..2445...0.0..1.153.972.2j6......0....1..gws-wiz.....0..0i131.DPwpRijoAMc']
+        request_POST = QueryDict(Settings.default(), mutable=True)
+        request_POST['source'] = 'hp'
+        request_POST['ei'] = 'H8jpXI_lN4OiswXa-oOwAw'
+        request_POST['q'] = 'asdfadsf'
+        request_POST['oq'] = 'asdfadsf'
+        request_POST['gs_l'] = 'psy-ab.12..0j0i10l3j0j0i10l5.1255.1577..2445...0.0..1.153.972.2j6......0....1..gws-wiz.....0..0i131.DPwpRijoAMc'
         self.assertDictEqual(request_POST, post_request_with_query.POST)
-        self.assertDictEqual(dict(), post_request_with_query.GET)
+        self.assertDictEqual(QueryDict(Settings.default(), mutable=True), post_request_with_query.GET)
 
         #close request file
         post_request_with_query_stream.close()
@@ -361,10 +367,10 @@ class RequestTests(unittest.TestCase):
         multipart_request.parse_request_body()
         
         #request data that should be present
-        _POST = dict()
-        _POST['id'] = ['123e4567-e89b-12d3-a456-426655440000']
-        _POST['address'] = ['{\r\n  \"street\": \"3, Garden St\",\r\n  \"city\": \"Hillsbery, UT\"\r\n}']
-        _GET = dict()
+        _POST = QueryDict(Settings.default(), mutable=True)
+        _POST['id'] = '123e4567-e89b-12d3-a456-426655440000'
+        _POST['address'] = '{\r\n  \"street\": \"3, Garden St\",\r\n  \"city\": \"Hillsbery, UT\"\r\n}'
+        _GET = QueryDict(Settings.default(), mutable=True)
 
         #test
         self.assertDictEqual(_POST, multipart_request.POST)

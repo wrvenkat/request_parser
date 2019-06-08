@@ -1,7 +1,7 @@
 import os, inspect
 
 from request_parser.http.multipartparser import MultiPartParser
-from request_parser.files import uploadhandler
+from request_parser.files import uploadhandler, utils
 from request_parser.conf.settings import Settings
 
 def test1():    
@@ -22,13 +22,9 @@ def test1():
         'Content-Type' : 'multipart/form-data; boundary=-------------------------9051914041544843365972754266'
     }
 
-    #for relative path
-    curr_filename = inspect.getframeinfo(inspect.currentframe()).filename
-    curr_path = os.path.dirname(os.path.abspath(curr_filename))
-
-    test_dir = "multipart test files/"
+    test_dir = "tests/multipart test files/"
     test_file1 = test_dir + "mp-test1.txt"
-    test_file1 = curr_path+"/"+test_file1
+    test_file1 = utils.get_abs_path(test_file1)
     stream1 = ''
 
     with open(test_file1, 'r') as stream1:

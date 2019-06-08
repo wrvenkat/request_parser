@@ -3,11 +3,11 @@ from request_parser.http.constants import MetaDict
 from request_parser.files.utils import get_abs_path
 
 def requestparser():
-    curr_dir = "request parse test files"
-    curr_dir = get_abs_path(curr_dir)
-
+    curr_dir = "tests/request parse test files/"
     get_request1 = "get-request1.txt"
     get_request1 = curr_dir+get_request1
+    get_request1 = get_abs_path(get_request1)
+    
     stream1 = ''
 
     with open(get_request1, 'r') as stream1:
