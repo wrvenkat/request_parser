@@ -14,13 +14,11 @@ __all__ = [
     'StopFutureHandlers'
 ]
 
-
 class UploadFileException(Exception):
     """
     Any error having to do with uploading files.
     """
     pass
-
 
 class StopUpload(UploadFileException):
     """
@@ -40,13 +38,11 @@ class StopUpload(UploadFileException):
         else:
             return 'StopUpload: Consume request data, then halt.'
 
-
 class SkipFile(UploadFileException):
     """
     This exception is raised by an upload handler that wants to skip a given file.
     """
     pass
-
 
 class StopFutureHandlers(UploadFileException):
     """
@@ -54,7 +50,6 @@ class StopFutureHandlers(UploadFileException):
     run should raise this exception instead of returning None.
     """
     pass
-
 
 class FileUploadHandler:
     """
@@ -68,6 +63,7 @@ class FileUploadHandler:
         self.content_length = None
         self.charset = None
         self.content_type_extra = None
+        self.transfer_encoding = None
         self.request = request
 
     def handle_raw_input(self, input_data, META, content_length, boundary, settings, encoding=None):
@@ -88,7 +84,7 @@ class FileUploadHandler:
         """
         pass
 
-    def new_file(self, field_name, file_name, content_type, content_length, charset=None, content_type_extra=None):
+    def new_file(self, field_name, file_name, content_type, content_length, charset=None, content_type_extra=None, transfer_encoding=None):
         """
         Signal that a new file has been started.
 
@@ -101,6 +97,7 @@ class FileUploadHandler:
         self.content_length = content_length
         self.charset = charset
         self.content_type_extra = content_type_extra
+        self.transfer_encoding = transfer_encoding
 
     def receive_data_chunk(self, raw_data, start):
         """
@@ -125,7 +122,6 @@ class FileUploadHandler:
         """
         pass
 
-
 class TemporaryFileUploadHandler(FileUploadHandler, object):
     """
     Upload handler that streams data into a temporary file.
@@ -144,7 +140,7 @@ class TemporaryFileUploadHandler(FileUploadHandler, object):
         Create the file object to append to as data is coming in.
         """
         super(TemporaryFileUploadHandler, self).new_file(*args, **kwargs)
-        self.file = TemporaryUploadedFile(self.file_name, self.content_type, 0, self.charset, self.settings, self.content_type_extra)
+        self.file = TemporaryUploadedFile(self.file_name, self.content_type, 0, self.charset, self.settings, self.content_type_extra, self.transfer_encoding)
 
     def receive_data_chunk(self, raw_data, start):
         self.file.write(raw_data)
@@ -153,7 +149,6 @@ class TemporaryFileUploadHandler(FileUploadHandler, object):
         self.file.seek(0)
         self.file.size = file_size
         return self.file
-
 
 class MemoryFileUploadHandler(FileUploadHandler, object):
     """
@@ -195,9 +190,9 @@ class MemoryFileUploadHandler(FileUploadHandler, object):
             content_type=self.content_type,
             size=file_size,
             charset=self.charset,
-            content_type_extra=self.content_type_extra
+            content_type_extra=self.content_type_extra,
+            transfer_encoding=self.transfer_encoding
         )
-
 
 class ConvenientFileUploadHandler(FileUploadHandler, object):
     """
@@ -245,7 +240,7 @@ class ConvenientFileUploadHandler(FileUploadHandler, object):
             temp_upload_handler.handle_raw_input(None, None, 0, None, self._settings)
 
             #create a new file
-            temp_upload_handler.new_file(self._handler.field_name, self._handler.file_name, self._handler.content_type, 0, self._handler.charset, self._handler.content_type_extra)
+            temp_upload_handler.new_file(self._handler.field_name, self._handler.file_name, self._handler.content_type, 0, self._handler.charset, self._handler.content_type_extra, self.transfer_encoding)
 
             #stream all of the read data into the temp file
             temp_upload_handler.receive_data_chunk(content, 0)
@@ -266,7 +261,6 @@ class ConvenientFileUploadHandler(FileUploadHandler, object):
 
     def upload_complete(self):
         self._handler.upload_complete()
-
 
 def load_handler(path, *args, **kwargs):
     """

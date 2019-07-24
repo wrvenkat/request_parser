@@ -230,6 +230,7 @@ class MultiPartParser:
                                 handler.new_file(
                                     field_name, file_name, content_type,
                                     content_length, charset, content_type_extra,
+                                    transfer_encoding
                                 )
                             #if a handler is handling a new file, it raises StopFutureHandlers
                             #to prevent others from handling it

@@ -377,6 +377,8 @@ class RequestTests(unittest.TestCase):
         self.assertDictEqual(_GET, multipart_request.GET)
         self.assertIn('profileImage', multipart_request.FILES)
         _file = multipart_request.FILES.get('profileImage')
+        #assert the transfer encoding
+        self.assertEqual(u'base64', _file.transfer_encoding)
         #we create a string equivalent to base64 encoding the first 100 bytes from the raw file.
         first_100_bytes_b64 = '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDg=='
         #we assert that it is equal to the same that can be obtained by reading the file
@@ -421,8 +423,7 @@ class RequestTests(unittest.TestCase):
             multipart_request.parse_request_body()
         self.assertEquals("Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.", rqdTooBig_Exception.exception.args[0])
         multipart_request_stream.close()
-        
-
+     
     def test_invalid_request_header(self):
         #Incorrectly terminated request
         invalid_request_1 = "GET asasd\r\nHost: www.knowhere123.com\r\n"

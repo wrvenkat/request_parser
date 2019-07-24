@@ -20,12 +20,13 @@ class UploadedFile(File, object):
     represents some file data that the user submitted with a form.
     """
 
-    def __init__(self, file=None, name=None, content_type=None, size=None, charset=None, content_type_extra=None):
+    def __init__(self, file=None, name=None, content_type=None, size=None, charset=None, content_type_extra=None, transfer_encoding=None):
         super(UploadedFile, self).__init__(file, name)
         self.size = size
         self.content_type = content_type
         self.charset = charset
         self.content_type_extra = content_type_extra
+        self.transfer_encoding = transfer_encoding
 
     def __repr__(self):
         return "<%s: %s (%s)>" % (self.__class__.__name__, self.name, self.content_type)
@@ -54,10 +55,10 @@ class TemporaryUploadedFile(UploadedFile, object):
     """
     A file uploaded to a temporary location (i.e. stream-to-disk).
     """
-    def __init__(self, name, content_type, size, charset, settings = Settings.default(), content_type_extra=None):
+    def __init__(self, name, content_type, size, charset, settings = Settings.default(), content_type_extra=None, transfer_encoding=None):
         _, ext = os.path.splitext(name)
         file = tempfile.NamedTemporaryFile(suffix='.upload' + ext, dir=settings.FILE_UPLOAD_TEMP_DIR)
-        super(TemporaryUploadedFile, self).__init__(file, name, content_type, size, charset, content_type_extra)
+        super(TemporaryUploadedFile, self).__init__(file, name, content_type, size, charset, content_type_extra, transfer_encoding)
 
     def temporary_file_path(self):
         """Return the full path of this file."""
@@ -72,13 +73,12 @@ class TemporaryUploadedFile(UploadedFile, object):
             # self.file.file.close() before the exception.     
             pass
 
-
 class InMemoryUploadedFile(UploadedFile, object):
     """
     A file uploaded into memory (i.e. stream-to-memory).
     """
-    def __init__(self, file, field_name, name, content_type, size, charset, content_type_extra=None):
-        super(InMemoryUploadedFile, self).__init__(file, name, content_type, size, charset, content_type_extra)
+    def __init__(self, file, field_name, name, content_type, size, charset, content_type_extra=None, transfer_encoding=None):
+        super(InMemoryUploadedFile, self).__init__(file, name, content_type, size, charset, content_type_extra, transfer_encoding)
         self.field_name = field_name
 
     def open(self, mode=None):
@@ -100,7 +100,7 @@ class SimpleUploadedFile(InMemoryUploadedFile, object):
     """
     def __init__(self, name, content, content_type='text/plain'):
         content = content or b''
-        super(SimpleUploadedFile, self).__init__(BytesIO(content), None, name, content_type, len(content), None, None)
+        super(SimpleUploadedFile, self).__init__(BytesIO(content), None, name, content_type, len(content), None, None, None)
 
     @classmethod
     def from_dict(cls, file_dict):
