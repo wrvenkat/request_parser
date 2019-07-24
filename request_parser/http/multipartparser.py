@@ -164,6 +164,7 @@ class MultiPartParser:
                 transfer_encoding = meta_data.get('content-transfer-encoding')
                 if transfer_encoding is not None:
                     transfer_encoding = transfer_encoding[0].strip()
+                    transfer_encoding = force_text(transfer_encoding, encoding, errors='replace')
                 field_name = force_text(field_name, encoding, errors='replace')
 
                 if item_type == FIELD:
@@ -202,9 +203,21 @@ class MultiPartParser:
                     if (self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None and
                             num_bytes_read > self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE):
                         raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
-
-                    force_text(data, encoding, errors='replace')
-                    self._post.appendlist(field_name, force_text(data, encoding, errors='replace'))
+                    
+                    #force_text(data, encoding, errors='replace')
+                    if transfer_encoding is None:
+                        transfer_encoding = ''
+                    content_type, content_type_extra = meta_data.get('content-type', ('', {}))
+                    content_type = content_type.strip()
+                    #print "data: "+data+"\r\ntype: "+content_type+"\r\nt.encoding: "+transfer_encoding
+                    #self._post.appendlist(field_name, force_text(data, encoding, errors='replace'))
+                    self._post.appendlist(field_name, {
+                                                        'data' : force_text(data, encoding, errors='replace'),
+                                                        'content-type' : force_text(content_type, encoding, errors='replace'),
+                                                        'transfer-encoding' : transfer_encoding,
+                                                        'content-type-extra': content_type_extra
+                                                      }
+                    )
                 elif item_type == FILE:
                     # This is a file, use the handler...
                     file_name = disposition.get('filename')

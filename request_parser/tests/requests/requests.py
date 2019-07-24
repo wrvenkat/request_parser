@@ -368,11 +368,21 @@ class RequestTests(unittest.TestCase):
         
         #request data that should be present
         _POST = QueryDict(Settings.default(), mutable=True)
-        _POST['id'] = '123e4567-e89b-12d3-a456-426655440000'
-        _POST['address'] = '{\r\n  \"street\": \"3, Garden St\",\r\n  \"city\": \"Hillsbery, UT\"\r\n}'
+        _POST['id'] = {
+                        'data' : '123e4567-e89b-12d3-a456-426655440000',
+                        'content-type' : 'text/plain',
+                        'transfer-encoding' : '',
+                        'content-type-extra' : {}
+                      }
+        _POST['address'] = {
+                            'data': '{\r\n  \"street\": \"3, Garden St\",\r\n  \"city\": \"Hillsbery, UT\"\r\n}',
+                            'content-type' : 'application/json',
+                            'transfer-encoding' : '',
+                            'content-type-extra' : {}
+                           }
         _GET = QueryDict(Settings.default(), mutable=True)
 
-        #test
+        #test        
         self.assertDictEqual(_POST, multipart_request.POST)
         self.assertDictEqual(_GET, multipart_request.GET)
         self.assertIn('profileImage', multipart_request.FILES)

@@ -74,7 +74,13 @@ class HttpRequest(object,):
         #Parsing status flags
         self._request_header_parsed = False
         self._request_body_parsed = False
-    
+
+        # POST dictionary in a multipart/form-data is of the form
+        # POST['key'] = { 'data'              : data,
+        #                 'content-type'      : type,
+        #                 'transfer-encoding' : val,
+        #                 'content-type-extra': {}
+        #               }
         self.POST = QueryDict(self.settings, mutable=True)
         self.FILES = MultiValueDict()
 
