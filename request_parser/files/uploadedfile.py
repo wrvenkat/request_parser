@@ -50,7 +50,6 @@ class UploadedFile(File, object):
 
     name = property(_get_name, _set_name)
 
-
 class TemporaryUploadedFile(UploadedFile, object):
     """
     A file uploaded to a temporary location (i.e. stream-to-disk).
@@ -92,7 +91,6 @@ class InMemoryUploadedFile(UploadedFile, object):
     def multiple_chunks(self, chunk_size=None):
         # Since it's in memory, we'll never have multiple chunks.
         return False
-
 
 class SimpleUploadedFile(InMemoryUploadedFile, object):
     """
