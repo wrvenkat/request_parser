@@ -407,30 +407,31 @@ class HttpRequest(object,):
         #request_header_stream = LazyStream(self._stream)
         request_header_stream = self._stream
         request_header = ''
+        unget_bytes = ''
 
         #read until we find a '\r\n\r\n' sequence
         request_header_end = -1
         while request_header_end == -1:
-            chunk = request_header_stream.read(self.settings.MAX_HEADER_SIZE)
+            chunk = request_header_stream.read(self.settings.MAX_HEADER_SIZE)            
             self._request_header_parsed = True
             if not chunk:
                 break
-            request_header_end = chunk.find(b'\r\n\r\n')
+            
+            request_header += chunk
+            request_header_end = request_header.find(b'\r\n\r\n')
             if request_header_end != -1:
-                request_header += chunk[:request_header_end]
-            else:
-                request_header += chunk
-        request_header+= b'\r\n'
+                #account for len('\r\n\r\n')                
+                unget_bytes = request_header[request_header_end+4:]
+                request_header = request_header[:request_header_end]
 
         #sanity check
         if request_header_end == -1:
             raise InvalidHttpRequest("Invalid HTTP request.", 400, '')
         
-        #account for '\r\n\r\n'
-        request_header_end += 4
         #put back anything starting from the request body
         #back onto the stream
-        request_header_stream.unget(chunk[request_header_end:])
+        request_header_stream.unget(unget_bytes)
+        request_header+= b'\r\n'
 
         #parse the request header
         request_line, request_headers = parse_request_headers(request_header)
