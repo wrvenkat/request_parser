@@ -474,10 +474,12 @@ class HttpRequest(object,):
         self.protocol_info = meta_dict[MetaDict.ReqLine.PROTO_INFO]
         #correctly set the encoding and the content-type
         self.content_type, header_dict = parse_header(request_headers.get('Content-Type'))
-        for key, value in header_dict.items():
-            if 'charset' == key.lower():
-                self.encoding = value
-                break
+        #sanity check for when Content-Type is not present
+        if header_dict is not None:        
+            for key, value in header_dict.items():
+                if 'charset' == key.lower():
+                    self.encoding = value
+                    break
 
         self.META[MetaDict.Info.QUERY_STRING] = meta_dict[MetaDict.ReqLine.QUERY_STRING]
         self.GET = QueryDict(self.settings, self.META[MetaDict.ReqLine.QUERY_STRING]) if self.META[MetaDict.ReqLine.QUERY_STRING] else QueryDict(self.settings, mutable=True)

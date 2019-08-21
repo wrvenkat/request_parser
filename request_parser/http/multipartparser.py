@@ -570,6 +570,10 @@ def parse_header(line):
     Input (line): bytes
     Output: str for key/name, bytes for values which will be decoded later.
     """
+    #sanity check
+    if line is None or len(line) <= 0:
+        return None, None
+
     plist = _parse_header_params(b';' + line)
     key = plist.pop(0).lower().decode('ascii')
     pdict = {}
@@ -597,6 +601,11 @@ def parse_header(line):
 
 def _parse_header_params(s):
     plist = []
+
+    #sanity check
+    if s is None:
+        return plist
+
     while s[:1] == b';':
         s = s[1:]
         end = s.find(b';')
