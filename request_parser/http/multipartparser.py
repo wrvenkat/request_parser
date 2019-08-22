@@ -571,7 +571,7 @@ def parse_header(line):
     Output: str for key/name, bytes for values which will be decoded later.
     """
     #sanity check
-    if line is None or len(line) <= 0:
+    if line is None:
         return None, None
 
     plist = _parse_header_params(b';' + line)
