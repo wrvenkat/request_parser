@@ -356,7 +356,7 @@ class HttpRequest(object,):
         """
         Return body as a raw byte stream.
         """        
-        #In the future, the self.is_plain_text() check should/could be replaced with
+        #In future, the content-type check should/could be replaced with
         #a call to check any content-type who's processing is not handled and requires
         #returning it raw
         if self._request_body_parsed and (self.content_type == 'application/x-www-form-urlencoded' or self.content_type == 'multipart/form-data'):
