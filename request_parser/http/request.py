@@ -359,7 +359,7 @@ class HttpRequest(object,):
         #In the future, the self.is_plain_text() check should/could be replaced with
         #a call to check any content-type who's processing is not handled and requires
         #returning it raw
-        if self._request_body_parsed and not self.is_plain_text():
+        if self._request_body_parsed and (self.content_type == 'application/x-www-form-urlencoded' or self.content_type == 'multipart/form-data'):
             raise RawPostDataException("You cannot access raw body after reading from request's data stream.")
     
         elif self._request_header_parsed and not hasattr(self, '_body'):
