@@ -122,6 +122,10 @@ class HttpRequest(object,):
 
     def get_scheme(self):
         return self.scheme
+    
+    def set_scheme(self, scheme):
+        if scheme is not None and len(scheme) > 0:
+            self.scheme = scheme
 
     def get_host(self):
         return self.host
