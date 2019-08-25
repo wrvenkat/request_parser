@@ -6,7 +6,7 @@ import locale
 import warnings
 from decimal import Decimal
 
-from future.backports.urllib.parse import quote, unquote
+from urllib.parse import quote, unquote
 
 class DjangoUnicodeDecodeError(UnicodeDecodeError):
     def __init__(self, obj, *args):

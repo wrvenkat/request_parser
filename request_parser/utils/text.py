@@ -1,5 +1,5 @@
 import re
-import htmlentitydefs
+import html.entities
 
 _entity_re = re.compile(r"&(#?[xX]?(?:[0-9a-fA-F]+|\w{1,8}));")
 
@@ -17,7 +17,7 @@ def _replace_entity(match):
             return match.group(0)
     else:
         try:
-            return chr(htmlentitydefs.name2codepoint[text])
+            return chr(html.entities.name2codepoint[text])
         except (ValueError, KeyError):
             return match.group(0)
 

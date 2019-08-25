@@ -6,7 +6,7 @@ import unicodedata
 from binascii import Error as BinasciiError
 from email.utils import formatdate
 
-from future.backports.urllib.parse import (
+from urllib.parse import (
     ParseResult, SplitResult, _coerce_args, _splitnetloc, _splitparams, quote,
     quote_plus, scheme_chars, unquote, unquote_plus,
     urlencode as original_urlencode, uses_params,
@@ -89,7 +89,7 @@ def urlencode(query, doseq=False):
     if isinstance(query, MultiValueDict):
         query = query.lists()
     elif hasattr(query, 'items'):
-        query = query.items()
+        query = list(query.items())
     query_params = []
     for key, value in query:
         if value is None:

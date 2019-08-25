@@ -92,7 +92,7 @@ class RequestHeaderTests(unittest.TestCase):
         """
         Test the META dict value for the request headers.
         """
-        request_stream = open(self.request_file, 'r')
+        request_stream = open(self.request_file, 'rb')
         http_request = HttpRequest(request_stream)
 
         #Confirm Request Headers
@@ -117,7 +117,7 @@ class RequestHeaderTests(unittest.TestCase):
         """
         Test the request line.
         """
-        request_stream = open(self.request_file, 'r')
+        request_stream = open(self.request_file, 'rb')
         http_request = HttpRequest(request_stream)
         http_request.parse_request_header()
 
@@ -135,7 +135,7 @@ class RequestHeaderTests(unittest.TestCase):
         """
         Test reconstructing the original request path with meta data.
         """
-        request_stream = open(self.request_file, 'r')
+        request_stream = open(self.request_file, 'rb')
         http_request = HttpRequest(request_stream)
         http_request.parse_request_header()
 
@@ -156,7 +156,7 @@ class RequestHeaderTests(unittest.TestCase):
         """
         Test (re)set of meta data post request header processing.
         """
-        request_stream = open(self.request_file, 'r')
+        request_stream = open(self.request_file, 'rb')
         http_request = HttpRequest(request_stream)
         http_request.parse_request_header()
 
@@ -193,13 +193,13 @@ class RequestHeaderTests(unittest.TestCase):
         utf16_BEBOM_encoding = "UTF-16"
 
         #an http_request
-        request_stream = open(self.request_file, 'r')
+        request_stream = open(self.request_file, 'rb')
         http_request = HttpRequest(request_stream)
         http_request.parse_request_header()
 
         #ISO-88591-1
         #reset content-type and encoding
-        iso_88591_1_body = open(iso_88591_1_file, 'r')
+        iso_88591_1_body = open(iso_88591_1_file, 'rb')
         http_request.content_type = "text/plain"
         http_request.encoding = iso_88591_1_encoding.lower()
         #set the request_body stream
@@ -207,7 +207,7 @@ class RequestHeaderTests(unittest.TestCase):
         http_request.parse_request_body()
 
         #check if the request body was properly decoded as ISO-8859-1
-        _body_file = open(iso_88591_1_file, 'r')
+        _body_file = open(iso_88591_1_file, 'rb')
         _body_bytes = _body_file.read()
         _body_bytes = _body_bytes.decode(iso_88591_1_encoding.lower())
         http_body = http_request.body()
@@ -216,7 +216,7 @@ class RequestHeaderTests(unittest.TestCase):
 
         #UTF-16
         #reset content-type and encoding
-        utf16_BEBOM_body = open(utf16_BEBOM_file, 'r')
+        utf16_BEBOM_body = open(utf16_BEBOM_file, 'rb')
         http_request.content_type = "text/plain"
         http_request.encoding = utf16_BEBOM_encoding.lower()
         #set the request_body stream
@@ -224,7 +224,7 @@ class RequestHeaderTests(unittest.TestCase):
         http_request.parse_request_body()
 
         #check if the request body was properly decoded as ISO-8859-1
-        _body_file = open(utf16_BEBOM_file, 'r')
+        _body_file = open(utf16_BEBOM_file, 'rb')
         _body_bytes = _body_file.read()
         _body_bytes = _body_bytes.decode(utf16_BEBOM_encoding.lower())
         http_body = http_request.body()
@@ -233,7 +233,7 @@ class RequestHeaderTests(unittest.TestCase):
 
         #UTF-8
         #reset content-type and encoding
-        utf8_body = open(utf8_file, 'r')
+        utf8_body = open(utf8_file, 'rb')
         http_request.content_type = "text/plain"
         http_request.encoding = utf8_encoding.lower()
         #set the request_body stream
@@ -241,7 +241,7 @@ class RequestHeaderTests(unittest.TestCase):
         http_request.parse_request_body()
 
         #check if the request body was properly decoded as ISO-8859-1
-        _body_file = open(utf8_file, 'r')
+        _body_file = open(utf8_file, 'rb')
         _body_bytes = _body_file.read()
         _body_bytes = _body_bytes.decode(utf8_encoding.lower())
         http_body = http_request.body()
@@ -252,7 +252,7 @@ class RequestHeaderTests(unittest.TestCase):
         request_stream.close()
 
     def test_http_request_stream_set(self):
-        request_stream = open(self.request_file, 'r')
+        request_stream = open(self.request_file, 'rb')
         http_request = HttpRequest(request_stream)
 
         #Confirm Request Headers
@@ -271,7 +271,7 @@ class RequestHeaderTests(unittest.TestCase):
         #another request file
         another_test_file = "get-request1.txt"
         another_test_file = join(self.test_files_dir, another_test_file)
-        another_test_file_stream = open(another_test_file, 'r')
+        another_test_file_stream = open(another_test_file, 'rb')
         http_request.stream = another_test_file_stream
 
         #Confirm new Request Headers
@@ -316,7 +316,7 @@ class RequestTests(unittest.TestCase):
 
     def test_request_query_string(self):
         #get file stream
-        get_request_with_query_stream = open(self.get_request_with_query,'r')
+        get_request_with_query_stream = open(self.get_request_with_query, 'rb')
 
         get_request_with_query = HttpRequest(get_request_with_query_stream)
         get_request_with_query.parse_request_header()
@@ -338,7 +338,7 @@ class RequestTests(unittest.TestCase):
         get_request_with_query_stream.close()
 
         #get file stream
-        post_request_with_query_stream = open(self.post_request_with_query_file,'r')
+        post_request_with_query_stream = open(self.post_request_with_query_file, 'rb')
 
         post_request_with_query = HttpRequest(post_request_with_query_stream)
         post_request_with_query.parse_request_header()
@@ -359,7 +359,7 @@ class RequestTests(unittest.TestCase):
         """
         Test a complex request with multipart-form-data body.
         """
-        multipart_request_stream = open(self.put_request_multipart_file, 'r')
+        multipart_request_stream = open(self.put_request_multipart_file, 'rb')
 
         #get a request handle
         multipart_request = HttpRequest(multipart_request_stream)
@@ -388,11 +388,11 @@ class RequestTests(unittest.TestCase):
         self.assertIn('profileImage', multipart_request.FILES)
         _file = multipart_request.FILES.get('profileImage')
         #assert the transfer encoding
-        self.assertEqual(u'base64', _file.transfer_encoding)
+        self.assertEqual('base64', _file.transfer_encoding)
         #we create a string equivalent to base64 encoding the first 100 bytes from the raw file.
         first_100_bytes_b64 = '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDg=='
         #we assert that it is equal to the same that can be obtained by reading the file
-        self.assertEquals(first_100_bytes_b64, base64.b64encode(_file.read(100)))
+        self.assertEqual(first_100_bytes_b64, base64.b64encode(_file.read(100)))
 
         #close it out
         multipart_request_stream.close()
@@ -403,7 +403,7 @@ class RequestTests(unittest.TestCase):
         """
 
         #text/plain test
-        multipart_request_stream = open(self.put_request_multipart_file, 'r')
+        multipart_request_stream = open(self.put_request_multipart_file, 'rb')
 
         #get a request handle
         multipart_request = HttpRequest(
@@ -415,11 +415,11 @@ class RequestTests(unittest.TestCase):
         multipart_request.content_type = "text/plain"
         with self.assertRaises(RequestDataTooBig) as rqdTooBig_Exception:
             multipart_request.parse_request_body()
-        self.assertEquals("Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.", rqdTooBig_Exception.exception.args[0])
+        self.assertEqual("Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.", rqdTooBig_Exception.exception.args[0])
         multipart_request_stream.close()
 
         #x-www-form-urlencoded test
-        multipart_request_stream = open(self.put_request_multipart_file, 'r')
+        multipart_request_stream = open(self.put_request_multipart_file, 'rb')
 
         #get a request handle
         multipart_request = HttpRequest(
@@ -431,79 +431,79 @@ class RequestTests(unittest.TestCase):
         multipart_request.content_type = "application/x-www-form-urlencoded"
         with self.assertRaises(RequestDataTooBig) as rqdTooBig_Exception:
             multipart_request.parse_request_body()
-        self.assertEquals("Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.", rqdTooBig_Exception.exception.args[0])
+        self.assertEqual("Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.", rqdTooBig_Exception.exception.args[0])
         multipart_request_stream.close()
      
     def test_invalid_request_header(self):
         #Incorrectly terminated request
-        invalid_request_1 = "GET asasd\r\nHost: www.knowhere123.com\r\n"
+        invalid_request_1 = b"GET asasd\r\nHost: www.knowhere123.com\r\n"
         invalid_request_1 = BytesIO(invalid_request_1)
         invalid_http_request = HttpRequest(invalid_request_1)
         with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
             invalid_http_request.parse_request_header()        
-        self.assertEquals("Invalid HTTP request.", iHR_Exception.exception.args[0])
-        self.assertEquals(400, iHR_Exception.exception.args[1])
+        self.assertEqual("Invalid HTTP request.", iHR_Exception.exception.args[0])
+        self.assertEqual(400, iHR_Exception.exception.args[1])
 
         #reuest without any headers
-        invalid_request_2 = "GET dadsadsasd HTTP/1.1\r\n\r\n\r\n"
+        invalid_request_2 = b"GET dadsadsasd HTTP/1.1\r\n\r\n\r\n"
         invalid_request_2 = BytesIO(invalid_request_2)
         invalid_http_request = HttpRequest(invalid_request_2)
         with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
             invalid_http_request.parse_request_header()
-        self.assertEquals("Invalid request. No request headers.", iHR_Exception.exception.args[0])
-        self.assertEquals(400, iHR_Exception.exception.args[1])
+        self.assertEqual("Invalid request. No request headers.", iHR_Exception.exception.args[0])
+        self.assertEqual(400, iHR_Exception.exception.args[1])
 
         #invalid request line_0
-        invalid_request = "GET asasd HTTP/1.1"
+        invalid_request = b"GET asasd HTTP/1.1"
         with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
             parse_request_headers(invalid_request)
         self.assertEqual("Invalid request. Request line terminated incorrectly.", iHR_Exception.exception.args[0])
-        self.assertEquals(400, iHR_Exception.exception.args[1])
+        self.assertEqual(400, iHR_Exception.exception.args[1])
 
         #incorrect request line_1
-        invalid_request_3 = "GET asasd\r\nHost: www.knowhere123.com\r\n\r\n"
+        invalid_request_3 = b"GET asasd\r\nHost: www.knowhere123.com\r\n\r\n"
         invalid_request_3 = BytesIO(invalid_request_3)
         invalid_http_request = HttpRequest(invalid_request_3)
         with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
             invalid_http_request.parse_request_header()
-        self.assertEquals("Invalid request line.", iHR_Exception.exception.args[0])
-        self.assertEquals(400, iHR_Exception.exception.args[1])
+        self.assertEqual("Invalid request line.", iHR_Exception.exception.args[0])
+        self.assertEqual(400, iHR_Exception.exception.args[1])
 
         #incorrect request line_2
-        invalid_request_4 = "GET asasd asdas HTTP/1.1\r\nHost: www.knowhere123.com\r\n\r\n"
+        invalid_request_4 = b"GET asasd asdas HTTP/1.1\r\nHost: www.knowhere123.com\r\n\r\n"
         invalid_request_4 = BytesIO(invalid_request_4)
         invalid_http_request = HttpRequest(invalid_request_4)
         with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
             invalid_http_request.parse_request_header()
-        self.assertEquals("Invalid request line.", iHR_Exception.exception.args[0])
-        self.assertEquals(400, iHR_Exception.exception.args[1])
+        self.assertEqual("Invalid request line.", iHR_Exception.exception.args[0])
+        self.assertEqual(400, iHR_Exception.exception.args[1])
 
         #incorrect request header
-        invalid_request_4 = "GET asasd HTTP/1.1\r\nHost www.knowhere123.com\r\n\r\n"
+        invalid_request_4 = b"GET asasd HTTP/1.1\r\nHost www.knowhere123.com\r\n\r\n"
         invalid_request_4 = BytesIO(invalid_request_4)
         invalid_http_request = HttpRequest(invalid_request_4)
         with self.assertRaises(InvalidHttpRequest) as iHR_Exception:
             invalid_http_request.parse_request_header()        
         self.assertIn("Invalid request header", iHR_Exception.exception.args[0])
-        self.assertEquals(400, iHR_Exception.exception.args[1])        
+        self.assertEqual(400, iHR_Exception.exception.args[1])        
 
     def test_post_process_body_read(self):
         """
         Read body for a non text/plain request after parse_request_body().
         """
-        http_request_stream = open(self.put_request_multipart_file, 'r')
+        http_request_stream = open(self.put_request_multipart_file, 'rb')
         http_request = HttpRequest(http_request_stream)
         http_request.parse_request_header()
         http_request.parse_request_body()
         with self.assertRaises(RawPostDataException) as rPDE_Exception:
             body = http_request.body()
-        self.assertEquals("You cannot access raw body after reading from request's data stream.", rPDE_Exception.exception.args[0])
+        self.assertEqual("You cannot access raw body after reading from request's data stream.", rPDE_Exception.exception.args[0])
 
     def test_invalid_request_body(self):
         """
         Test request body.
         """
-        http_request_stream = open(self.put_request_multipart_file, 'r')
+        http_request_stream = open(self.put_request_multipart_file, 'rb')
         http_request = HttpRequest(http_request_stream)
         http_request.parse_request_header()
 
@@ -513,27 +513,27 @@ class RequestTests(unittest.TestCase):
         request_headers.setlist('Content-Type','application/x-www-form-urlencoded')
         with self.assertRaises(MultiPartParserError) as mPPE_Exception:
             http_request.parse_request_body()
-        self.assertEquals('Invalid Content-Type: application/x-www-form-urlencoded', mPPE_Exception.exception.args[0])
+        self.assertEqual('Invalid Content-Type: application/x-www-form-urlencoded', mPPE_Exception.exception.args[0])
         
         #close the file
         http_request_stream.close()
 
         #get a POST request and pass it a multipart body
-        http_request_stream = open(self.post_request_with_query_file, 'r')
+        http_request_stream = open(self.post_request_with_query_file, 'rb')
         http_request = HttpRequest(http_request_stream)
         http_request.parse_request_header()
 
         #change request body
-        multipart_body = "---------------------------9051914041544843365972754266\r\n"
-        multipart_body += "Content-Disposition: form-data; name=\"file1\"; filename=\"a.txt\"\r\n"
-        multipart_body+= "Content-Type: text/plain\r\n\r\nContent of a.txt:\r\n"
-        multipart_body+= " abcdefghijklmnopqrstuvwxyz1234567890aabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz11223344556677889900~!@#$%^&*()_+\r\n"
-        multipart_body+= "---------------------------9051914041544843365972754266--\r\n\r\n"
+        multipart_body  = b"---------------------------9051914041544843365972754266\r\n"
+        multipart_body += b"Content-Disposition: form-data; name=\"file1\"; filename=\"a.txt\"\r\n"
+        multipart_body += b"Content-Type: text/plain\r\n\r\nContent of a.txt:\r\n"
+        multipart_body += b" abcdefghijklmnopqrstuvwxyz1234567890aabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz11223344556677889900~!@#$%^&*()_+\r\n"
+        multipart_body += b"---------------------------9051914041544843365972754266--\r\n\r\n"
         multipart_body = BytesIO(multipart_body)
         http_request.body_stream = multipart_body
         http_request.parse_request_body()
         self.assertIn(' name', http_request.POST)
-        self.assertEquals('"file1"', http_request.POST[' name'])
+        self.assertEqual('"file1"', http_request.POST[' name'])
 
         #close the file
         http_request_stream.close()

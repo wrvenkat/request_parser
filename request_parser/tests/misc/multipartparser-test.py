@@ -27,12 +27,12 @@ def test1():
     test_file1 = utils.get_abs_path(test_file1)
     stream1 = ''
 
-    with open(test_file1, 'r') as stream1:
+    with open(test_file1, 'rb') as stream1:
         try:
             multipartparser_1 = MultiPartParser(META, stream1, upload_handlers, Settings.default())
             post, files = multipartparser_1.parse()
-            print "Done parsing!"
+            print("Done parsing!")
         except Exception as e:
-            print "Exception is: {}".format(e)
+            print("Exception is: {}".format(e))
     
 test1()

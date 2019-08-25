@@ -5,7 +5,7 @@ def urlparsetest():
     test1_url = "/path-to/a-file.html?key1=val1&key2=val2"
 
     result1 = http._urlparse(test1_url)
-    print result1
+    print(result1)
 
 def request_line_parse(request_line=''):
     """
@@ -13,7 +13,7 @@ def request_line_parse(request_line=''):
     <METHOD> <SCHEME>://<DOMAIN>/<PATH>;<PARAMS>?<QUERY>#<FRAGMENT> <PROTOCOL_INFO>
     """
 
-    method, uri, protoccol_version = request_line.split(' ',3)
+    method, uri, protoccol_version = request_line.split(b' ',3)
 
     if method is None or uri is None or protoccol_version is None:
         raise InvalidHttpRequest("Invalid request line.")
@@ -35,7 +35,7 @@ def request_line_parse_test():
     request_line1 = "GET /path-to/a-file.html?key1=val1&key2=val2 HTTP/1.1"
 
     result1 = request_line_parse(request_line1)
-    print result1
+    print(result1)
 
 urlparsetest()
 request_line_parse_test()

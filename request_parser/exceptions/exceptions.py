@@ -96,7 +96,7 @@ class ValidationError(Exception):
 
         if isinstance(message, dict):
             self.error_dict = {}
-            for field, messages in message.items():
+            for field, messages in list(message.items()):
                 if not isinstance(messages, ValidationError):
                     messages = ValidationError(messages)
                 self.error_dict[field] = messages.error_list
@@ -108,7 +108,7 @@ class ValidationError(Exception):
                 if not isinstance(message, ValidationError):
                     message = ValidationError(message)
                 if hasattr(message, 'error_dict'):
-                    self.error_list.extend(sum(message.error_dict.values(), []))
+                    self.error_list.extend(sum(list(message.error_dict.values()), []))
                 else:
                     self.error_list.extend(message.error_list)
 
@@ -129,12 +129,12 @@ class ValidationError(Exception):
     @property
     def messages(self):
         if hasattr(self, 'error_dict'):
-            return sum(dict(self).values(), [])
+            return sum(list(dict(self).values()), [])
         return list(self)
 
     def update_error_dict(self, error_dict):
         if hasattr(self, 'error_dict'):
-            for field, error_list in self.error_dict.items():
+            for field, error_list in list(self.error_dict.items()):
                 error_dict.setdefault(field, []).extend(error_list)
         else:
             error_dict.setdefault(NON_FIELD_ERRORS, []).extend(self.error_list)
@@ -142,7 +142,7 @@ class ValidationError(Exception):
 
     def __iter__(self):
         if hasattr(self, 'error_dict'):
-            for field, errors in self.error_dict.items():
+            for field, errors in list(self.error_dict.items()):
                 yield field, list(ValidationError(errors))
         else:
             for error in self.error_list:

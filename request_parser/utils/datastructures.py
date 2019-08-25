@@ -83,7 +83,7 @@ class MultiValueDict(dict):
         #with a default value being an empty dictionary
         data = obj_dict.pop('_data', {})
         #for each (key, value) tuple in data
-        for k, v in data.items():
+        for k, v in list(data.items()):
             #create the list with value v for key k
             self.setlist(k, v)
         #update the attribute dictionary from the returned obj_dict
@@ -180,7 +180,7 @@ class MultiValueDict(dict):
 
     def lists(self):
         """Yield (key, list) pairs."""
-        return iter(super(MultiValueDict, self).items())
+        return iter(list(super(MultiValueDict, self).items()))
 
     def values(self):
         """Yield the last value on every key list."""
@@ -211,7 +211,7 @@ class MultiValueDict(dict):
                 #then assuming it's some dictionary, it's iterated upon
                 try:
                     #for each (key, value) tuple in the other_dict,
-                    for key, value in other_dict.items():
+                    for key, value in list(other_dict.items()):
                         #the existing one is /appended/ since we don't know
                         #the type of the value, we can only append and not
                         #extend
@@ -222,7 +222,7 @@ class MultiValueDict(dict):
                     raise ValueError("MultiValueDict.update() takes either a MultiValueDict or dictionary")
         #now we parse the kwargs, which is a dictionary
         #so, for each (key, value) tuple in the kwargs dictionary
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
             #the value for each key is /appended/ since we don't know if value
             #will be another list
             self.setlistdefault(key).append(value)
@@ -301,7 +301,7 @@ class ImmutableMultiValueDict(MultiValueDict):
         #with a default value being an empty dictionary
         data = obj_dict.pop('_data', {})
         #for each (key, value) tuple in data
-        for k, v in data.items():
+        for k, v in list(data.items()):
             #create the list with value v for key k
             super(ImmutableMultiValueDict, self).setlist(k, v)
         #update the attribute dictionary from the returned obj_dict
@@ -395,7 +395,7 @@ class LazyStream:
         return out
 
     #def __next__(self):
-    def next(self):
+    def __next__(self):
         """
         Used when the exact number of bytes to read is unimportant.
 
@@ -467,7 +467,7 @@ class ChunkIter:
         self.chunk_size = chunk_size
 
     #def __next__(self):
-    def next(self):
+    def __next__(self):
         try:
             data = self.flo.read(self.chunk_size)
         except InputStreamExhausted:

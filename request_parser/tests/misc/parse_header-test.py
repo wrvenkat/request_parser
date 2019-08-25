@@ -1,4 +1,4 @@
-from future.backports.urllib.parse import unquote
+from urllib.parse import unquote
 
 def parse_header(line):
     """
@@ -49,10 +49,10 @@ def _parse_header_params(s):
     return plist
 
 s1 = 'multipart/form-data"; jhkh; boundary=---------------------------9051914041"544843365972754266; boundary=-----------12312312'
-print parse_header(s1)
+print(parse_header(s1))
 
 s2 = 'foo/bar;key="A,B,C"'
-print parse_header(s2)
+print(parse_header(s2))
 
 s3 = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36'
-print parse_header(s3)
+print(parse_header(s3))

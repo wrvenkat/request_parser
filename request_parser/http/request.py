@@ -3,8 +3,7 @@ import re
 import warnings
 from io import BytesIO
 from itertools import chain
-#from urllib.parse import quote, urlencode, urljoin, urlsplit
-from urllib import quote, urlencode
+from urllib.parse import quote, urlencode
     #urljoin, urlsplit
 
 from request_parser.conf.settings import Settings
@@ -16,7 +15,7 @@ from request_parser.http.multipartparser import MultiPartParser, MultiPartParser
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict, ImmutableMultiValueDict
 from request_parser.utils.encoding import escape_uri_path, iri_to_uri, uri_to_iri
 from request_parser.utils.http import is_same_domain, limited_parse_qsl, _urlparse as urlparse
-from constants import MetaDict
+from .constants import MetaDict
 
 from six import reraise as raise_
 
@@ -375,8 +374,8 @@ class HttpRequest(object,):
             #default chunk_size is 64KB
             chunk_size = 64 * (2 ** 10)
             read_size = 0
-            chunk = ''
-            _body = ''
+            chunk = b''
+            _body = b''
             try:                
                 chunk = self.read(chunk_size)
                 read_size += len(chunk)
@@ -410,8 +409,8 @@ class HttpRequest(object,):
             #self._stream = BytesIO()
         #request_header_stream = LazyStream(self._stream)
         request_header_stream = self._stream
-        request_header = ''
-        unget_bytes = ''
+        request_header = b''
+        unget_bytes = b''
 
         #read until we find a '\r\n\r\n' sequence
         request_header_end = -1
@@ -480,7 +479,7 @@ class HttpRequest(object,):
         self.content_type, header_dict = parse_header(request_headers.get('Content-Type'))
         #sanity check for when Content-Type is not present
         if header_dict is not None:        
-            for key, value in header_dict.items():
+            for key, value in list(header_dict.items()):
                 if 'charset' == key.lower():
                     self.encoding = value
                     break
@@ -644,7 +643,7 @@ class QueryDict(MultiValueDict):
         self._mutable = mutable
 
     @classmethod
-    def fromkeys(cls, iterable, value='', mutable=False, encoding=None):
+    def fromkeys(cls, iterable, value=b'', mutable=False, encoding=None):
         """
         Return a new QueryDict with keys (may be repeated) from an iterable and
         values from value.
@@ -767,7 +766,7 @@ def bytes_to_text(s, encoding):
     """
     Convert bytes objects to strings, using the given encoding. Illegally
     encoded input characters are replaced with Unicode "unknown" codepoint
-    (\ufffd).
+    (\\ufffd).
 
     Return any non-bytes objects without change.
     """
@@ -805,7 +804,7 @@ def parse_request_headers(request_header_stream):
 
     Returns the request line and a mutable key-value pair headers dictionary.
     """
-    request_line = ''
+    request_line = b''
     request_headers = {}
     start = 0
 
@@ -829,11 +828,11 @@ def parse_request_headers(request_header_stream):
         #parse the request header
         end_index = request_header.find(b':')
         if end_index != -1:
-            header =  request_header[:end_index]
-            header = header.encode('ascii','')
-            value = request_header[end_index+1:]
+            header =  request_header[:end_index].decode('ascii')
+            #header = header.encode('ascii','')
+            value = request_header[end_index+1:].decode('ascii')
             value = value.strip()
-            value = value.encode('ascii','')
+            #value = value.encode('ascii','')
             if header in request_headers:
                 request_headers[header].append(value)
             else:
@@ -852,12 +851,12 @@ def parse_request_headers(request_header_stream):
     
     return request_line, request_headers
 
-def parse_request_line(request_line=''):
+def parse_request_line(request_line=b''):
     """
     Parse the request line in an HTTP/HTTP Proxy request and return a dictionary with 8 entries:
     <METHOD> <SCHEME>://<DOMAIN>/<PATH>;<PARAMS>?<QUERY_STRING>#<FRAGMENT> <PROTOCOL_INFO>
     """
-    _splits = request_line.split(' ')
+    _splits = request_line.split(b' ')
 
     if len(_splits) != 3:
         raise InvalidHttpRequest("Invalid request line.", 400)
