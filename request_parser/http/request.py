@@ -134,7 +134,7 @@ class HttpRequest(object,):
 
     def get_full_path(self, force_append_slash=False, raw=False):
         if raw:
-            _path = self._get_full_path(self.get_path(), force_append_slash).decode('utf-8')
+            _path = self._get_full_path(self.get_path(), force_append_slash)#.decode('utf-8')
             return uri_to_iri(_path)            
         else:
             return self._get_full_path(self.get_path(), force_append_slash).encode('ascii', errors='replace')
@@ -157,11 +157,19 @@ class HttpRequest(object,):
         """
         Return a safe, absolute URI if raw is false from meta data available in this request. Return the raw URI otherwise
         """
-        return '{scheme}://{host}{path}'.format(
+        scheme=self.scheme
+        host=self.host
+        path = self.get_full_path(raw=True) if raw else self.get_full_path()
+        orig = '{scheme}://{host}{path}'.format(
             scheme=self.scheme,
             host=self.host,
-            path = self.get_full_path(raw=True) if raw else self.get_full_path(),
+            path = self.get_full_path(raw=True) if raw else self.get_full_path()
         )
+        new = b''.join([scheme,b'://',host, path])
+        if raw:
+            return new.decode('utf-8')
+        else:
+            return new
 
     def get_protocol_info(self):
         return self.protocol_info
