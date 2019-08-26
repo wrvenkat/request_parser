@@ -69,7 +69,7 @@ class MultiPartParser:
         # Content-Length should contain the length of the body we are about
         # to receive.
         try:
-            content_length = int(META.get('Content-Length', 0))
+            content_length = int(META.get(b'Content-Length', 0))
         except (ValueError, TypeError):
             content_length = 0
 

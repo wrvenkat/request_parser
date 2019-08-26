@@ -391,7 +391,7 @@ class RequestTests(unittest.TestCase):
         #assert the transfer encoding
         self.assertEqual('base64', _file.transfer_encoding)
         #we create a string equivalent to base64 encoding the first 100 bytes from the raw file.
-        first_100_bytes_b64 = '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDg=='
+        first_100_bytes_b64 = b'/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDg=='
         #we assert that it is equal to the same that can be obtained by reading the file
         self.assertEqual(first_100_bytes_b64, base64.b64encode(_file.read(100)))
 
