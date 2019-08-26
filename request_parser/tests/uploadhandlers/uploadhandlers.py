@@ -44,7 +44,7 @@ class UploadHandlerTest(unittest.TestCase):
         Test MemoryFileUploadHandler and InMemoryUploadedFile
         """
         #get a file object
-        test_file = open(self.test_file_path, "r")
+        test_file = open(self.test_file_path, "rb")
 
         #set max in memory to 1MB
         max_in_memory_size = 1 * (2 ** 10) * (2 ** 10)
@@ -81,14 +81,14 @@ class UploadHandlerTest(unittest.TestCase):
         x = in_memory_file.read()
 
         self.assertTrue(isinstance(in_memory_file, InMemoryUploadedFile))
-        self.assertEqual(b"kitten.jpg", in_memory_file.name)
+        self.assertEqual("kitten.jpg", in_memory_file.name)
 
     def test_in_memory_upload_inactive(self):
         """
         Test MemoryFileUploadHandler when it's inactive.
         """
         #get a file object
-        test_file = open(self.test_file_path, "r")
+        test_file = open(self.test_file_path, "rb")
 
         #set max in memory to 500KB
         max_in_memory_size = 500 * (2 ** 10)
@@ -131,7 +131,7 @@ class UploadHandlerTest(unittest.TestCase):
         """
         
         #get a file object
-        test_file = open(self.test_file_path, "r")
+        test_file = open(self.test_file_path, "rb")
 
         #get the temporary upload handler
         temp_file_upload_handler = self.upload_handlers[1]
@@ -164,7 +164,7 @@ class UploadHandlerTest(unittest.TestCase):
 
         self.assertTrue(isinstance(temp_upload_file, TemporaryUploadedFile))
         file_name, file_extension = splitext(temp_upload_file.name)
-        self.assertEqual(b".jpg", file_extension)
+        self.assertEqual(".jpg", file_extension)
     
     def test_convenient_file_upload_in_memory(self):
         """
@@ -172,7 +172,7 @@ class UploadHandlerTest(unittest.TestCase):
         """
         
         #get a file object
-        test_file = open(self.test_file_path, "r")
+        test_file = open(self.test_file_path, "rb")
 
          #set max in memory to 1MB
         max_in_memory_size = 1 * (2 ** 10) * (2 ** 10)
@@ -208,7 +208,7 @@ class UploadHandlerTest(unittest.TestCase):
         in_memory_file = convenient_upload_handler.file_complete(total_chunk_length)        
 
         self.assertTrue(isinstance(in_memory_file, InMemoryUploadedFile))
-        self.assertEqual(b"kitten.jpg", in_memory_file.name)
+        self.assertEqual("kitten.jpg", in_memory_file.name)
 
     def test_convenient_file_upload_to_disk(self):
         """
@@ -216,7 +216,7 @@ class UploadHandlerTest(unittest.TestCase):
         """
         
         #get a file object
-        test_file = open(self.test_file_path, "r")
+        test_file = open(self.test_file_path, "rb")
 
         #set max in memory to 500KB
         max_in_memory_size = 500 * (2 ** 10)
@@ -255,6 +255,6 @@ class UploadHandlerTest(unittest.TestCase):
 
         self.assertTrue(isinstance(on_disk_file, TemporaryUploadedFile))
         file_name, file_extension = splitext(on_disk_file.name)
-        self.assertEqual(b".jpg", file_extension)    
+        self.assertEqual(".jpg", file_extension)    
 
 unittest.main()
