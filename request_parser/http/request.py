@@ -21,7 +21,7 @@ from six import reraise as raise_
 
 RAISE_ERROR = object()
 #validates a given string for a format of the form host:port
-host_validation_re = re.compile(r"^([a-z0-9.-]+|\[[a-f0-9]*:[a-f0-9\.:]+\])(:\d+)?$")
+host_validation_re = re.compile(rb"^([a-z0-9.-]+|\[[a-f0-9]*:[a-f0-9\.:]+\])(:\d+)?$")
 
 class UnreadablePostError(IOError):
     pass
@@ -447,9 +447,9 @@ class HttpRequest(object,):
         if meta_dict[MetaDict.ReqLine.DOMAIN]:
             host = meta_dict[MetaDict.ReqLine.DOMAIN]
         else:
-            if 'Host' in request_headers:
-                host = request_headers['Host']
-                del request_headers['Host']
+            if b'Host' in request_headers:
+                host = request_headers[b'Host']
+                del request_headers[b'Host']
             else:
                 raise NoHostFoundException("No HOST header found in the HTTP request")
         
@@ -457,30 +457,30 @@ class HttpRequest(object,):
         if meta_dict[MetaDict.ReqLine.SCHEME]:
             self.scheme = meta_dict[MetaDict.ReqLine.SCHEME].lower()
         else:
-            self.scheme = 'UNKNOWN'
+            self.scheme = b'UNKNOWN'
 
         #populate the server host and port
         host, port = split_domain_port(host)
         self.host = host
         if not port:
-            if meta_dict[MetaDict.ReqLine.SCHEME].lower() == 'https':
+            if meta_dict[MetaDict.ReqLine.SCHEME].lower() == b'https':
                 port = 443
-            elif meta_dict[MetaDict.ReqLine.SCHEME].lower() == 'http':
+            elif meta_dict[MetaDict.ReqLine.SCHEME].lower() == b'http':
                 port = 80
             else:
                 #invalid port no.
-                port = 65536
+                port = bytes(65536)
         self.port = port
 
         self.method = meta_dict[MetaDict.ReqLine.METHOD]
         self.path = meta_dict[MetaDict.ReqLine.PATH]
         self.protocol_info = meta_dict[MetaDict.ReqLine.PROTO_INFO]
         #correctly set the encoding and the content-type
-        self.content_type, header_dict = parse_header(request_headers.get('Content-Type'))
+        self.content_type, header_dict = parse_header(request_headers.get(b'Content-Type'))
         #sanity check for when Content-Type is not present
         if header_dict is not None:        
             for key, value in list(header_dict.items()):
-                if 'charset' == key.lower():
+                if b'charset' == key.lower():
                     self.encoding = value
                     break
 
@@ -523,7 +523,7 @@ class HttpRequest(object,):
             return
         body_stream.unget(data)
         
-        if self.content_type == 'multipart/form-data':      
+        if self.content_type == b'multipart/form-data':      
             try:
                 #returns POST QueryDict and MultiValueDict for _files
                 self._post, self._files = self._parse_file_upload(self.META.get(MetaDict.Info.REQ_HEADERS), body_stream)
@@ -534,7 +534,7 @@ class HttpRequest(object,):
                 # attempts to parse POST data again.
                 self._mark_post_parse_error()
                 raise
-        elif self.content_type == 'application/x-www-form-urlencoded':
+        elif self.content_type == b'application/x-www-form-urlencoded':
             #if the content-type is of form-urlencoded, then all we need to do is to parse the body
             #as a key-value pair. This gives our _post and an empty _files of MultiValueDict
             self._post, self._files = QueryDict(self.settings, self.body(), encoding=self.encoding), MultiValueDict()
@@ -543,8 +543,8 @@ class HttpRequest(object,):
             self._post, self._files = QueryDict(self.settings, encoding=self.encoding), MultiValueDict()
         
         #restart content-type check
-        if self.content_type == 'text/plain' or self.content_type == 'text/html'\
-            or self.content_type == 'application/json':
+        if self.content_type == b'text/plain' or self.content_type == b'text/html'\
+            or self.content_type == b'application/json':
             self._body = self.body().decode(self.encoding)
         else:
             self._body = self.body().decode(self.encoding)
@@ -786,15 +786,15 @@ def split_domain_port(host):
     host = host.lower()
 
     if not host_validation_re.match(host):
-        return '', ''
+        return b'', b''
 
-    if host[-1] == ']':
+    if host[-1] == b']':
         # It's an IPv6 address without a port.
-        return host, ''
-    bits = host.rsplit(':', 1)
-    domain, port = bits if len(bits) == 2 else (bits[0], '')
+        return host, b''
+    bits = host.rsplit(b':', 1)
+    domain, port = bits if len(bits) == 2 else (bits[0], b'')
     # Remove a trailing dot (if present) from the domain.
-    domain = domain[:-1] if domain.endswith('.') else domain
+    domain = domain[:-1] if domain.endswith(b'.') else domain
     return domain, port
 
 def parse_request_headers(request_header_stream):
@@ -828,9 +828,9 @@ def parse_request_headers(request_header_stream):
         #parse the request header
         end_index = request_header.find(b':')
         if end_index != -1:
-            header =  request_header[:end_index].decode('ascii')
+            header =  request_header[:end_index]
             #header = header.encode('ascii','')
-            value = request_header[end_index+1:].decode('ascii')
+            value = request_header[end_index+1:]
             value = value.strip()
             #value = value.encode('ascii','')
             if header in request_headers:

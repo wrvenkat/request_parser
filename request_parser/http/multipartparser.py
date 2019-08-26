@@ -61,7 +61,7 @@ class MultiPartParser:
             raise MultiPartParserError('Invalid Content-Type: %s' % content_type)
 
         # Parse the header to get the boundary to split the parts.
-        content_types, opts = parse_header(content_type)
+        content_types, opts = parse_header(content_type.encode('ascii'))
         boundary = opts.get('boundary')
         if not boundary or not cgi.valid_boundary(boundary):
             raise MultiPartParserError('Invalid boundary in multipart: %s' % boundary.decode())
@@ -574,28 +574,28 @@ def parse_header(line):
     if line is None:
         return None, None
 
-    plist = _parse_header_params(';' + line)
-    key = plist.pop(0).lower()
+    plist = _parse_header_params(b';' + line)
+    key = plist.pop(0).lower().decode('ascii')
     pdict = {}
     for p in plist:
-        i = p.find('=')
+        i = p.find(b'=')
         if i >= 0:
             has_encoding = False
-            name = p[:i].strip().lower()
+            name = p[:i].strip().lower().decode('ascii')
             if name.endswith('*'):
                 # Lang/encoding embedded in the value (like "filename*=UTF-8''file.ext")
                 # http://tools.ietf.org/html/rfc2231#section-4
                 name = name[:-1]
-                if p.count("'") == 2:
+                if p.count(b"'") == 2:
                     has_encoding = True
             value = p[i + 1:].strip()
             if has_encoding:
-                encoding, lang, value = value.split("'")                
+                encoding, lang, value = value.split(b"'")                
                 #will come back to bite us. Investigate -> DONE
                 value = unquote(value.decode(), encoding=encoding.decode())
-            if len(value) >= 2 and value[:1] == value[-1:] == '"':
+            if len(value) >= 2 and value[:1] == value[-1:] == b'"':
                 value = value[1:-1]
-                value = value.replace('\\\\', '\\').replace('\\"', '"')
+                value = value.replace(b'\\\\', b'\\').replace(b'\\"', b'"')
             pdict[name] = value
     return key, pdict
 
@@ -606,9 +606,9 @@ def _parse_header_params(s):
     if s is None:
         return plist
 
-    while s[:1] == ';':
+    while s[:1] == b';':
         s = s[1:]
-        end = s.find(';')
+        end = s.find(b';')
         #if there's a " bounded by the recently found ; then we
         #look for the next ; starting at the index where the ; was
         #found + 1 (end + 1)
@@ -619,8 +619,8 @@ def _parse_header_params(s):
         #that doesn't have " within its boundary
         #once such a sequence is found, it hopefully
         #is of the form 'boundary=------12312312312312'
-        while end > 0 and s.count('"', 0, end) % 2:
-            end = s.find(';', end + 1)
+        while end > 0 and s.count(b'"', 0, end) % 2:
+            end = s.find(b';', end + 1)
         if end < 0:
             end = len(s)
         f = s[:end]
