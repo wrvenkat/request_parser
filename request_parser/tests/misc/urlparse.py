@@ -32,7 +32,7 @@ def request_line_parse(request_line=''):
     return request_line_result
 
 def request_line_parse_test():
-    request_line1 = "GET /path-to/a-file.html?key1=val1&key2=val2 HTTP/1.1"
+    request_line1 = b"GET /path-to/a-file.html?key1=val1&key2=val2 HTTP/1.1"
 
     result1 = request_line_parse(request_line1)
     print(result1)
