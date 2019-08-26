@@ -240,7 +240,7 @@ class ConvenientFileUploadHandler(FileUploadHandler, object):
             temp_upload_handler.handle_raw_input(None, None, 0, None, self._settings)
 
             #create a new file
-            temp_upload_handler.new_file(self._handler.field_name, self._handler.file_name, self._handler.content_type, 0, self._handler.charset, self._handler.content_type_extra, self.transfer_encoding)
+            temp_upload_handler.new_file(self._handler.field_name, self._handler.file_name, self._handler.content_type, 0, self._handler.charset, self._handler.content_type_extra, self._handler.transfer_encoding)
 
             #stream all of the read data into the temp file
             temp_upload_handler.receive_data_chunk(content, 0)
