@@ -18,7 +18,7 @@ class SettingsTests(unittest.TestCase):
         if system() == 'Linux' or system() == 'Darwin':
             with self.assertRaises(InvalidDirectory) as invalidDir_Exception:
                 settings = Settings({Settings.Key.FILE_UPLOAD_DIR : "/etc/"})
-            self.assertEqual("No write permissions to directory: /etc", invalidDir_Exception.exception.args[0])
+            self.assertEqual(b"No write permissions to directory: /etc", invalidDir_Exception.exception.args[0])
         
         if system() == 'Windows':
             settings = Settings({Settings.Key.FILE_UPLOAD_DIR : "C:/Program Files"})

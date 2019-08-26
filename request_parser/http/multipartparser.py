@@ -56,12 +56,12 @@ class MultiPartParser:
         self.settings = settings
 
         # Content-Type should contain multipart and the boundary information.
-        content_type = META.get('Content-Type', '')
-        if not content_type.startswith('multipart/'):
+        content_type = META.get(b'Content-Type', b'')
+        if not content_type.startswith(b'multipart/'):
             raise MultiPartParserError('Invalid Content-Type: %s' % content_type)
 
         # Parse the header to get the boundary to split the parts.
-        content_types, opts = parse_header(content_type.encode('ascii'))
+        content_types, opts = parse_header(content_type)
         boundary = opts.get('boundary')
         if not boundary or not cgi.valid_boundary(boundary):
             raise MultiPartParserError('Invalid boundary in multipart: %s' % boundary.decode())

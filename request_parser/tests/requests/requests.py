@@ -46,7 +46,7 @@ class HttpRequestBasicTests(unittest.TestCase):
         request.path = '/;some/?awful/=path/foo:bar/'
         request.path_info = '/prefix' + request.path
         request.META['QUERY_STRING'] = ';some=query&+query=string'
-        expected = '/%3Bsome/%3Fawful/%3Dpath/foo:bar/?;some=query&+query=string'
+        expected = b'/%3Bsome/%3Fawful/%3Dpath/foo:bar/?;some=query&+query=string'
         self.assertEqual(request.get_full_path(), expected)        
 
     def test_httprequest_full_path_with_query_string_and_fragment(self):
@@ -54,7 +54,7 @@ class HttpRequestBasicTests(unittest.TestCase):
         request.path = '/foo#bar'
         request.path_info = '/prefix' + request.path
         request.META['QUERY_STRING'] = 'baz#quux'
-        self.assertEqual(request.get_full_path(), '/foo%23bar?baz#quux')
+        self.assertEqual(request.get_full_path(), b'/foo%23bar?baz#quux')
 
     def test_httprequest_repr(self):
         request = HttpRequest()
@@ -64,7 +64,7 @@ class HttpRequestBasicTests(unittest.TestCase):
         request.POST = {'post-key': 'post-value'}
         request.COOKIES = {'post-key': 'post-value'}
         request.META = {'post-key': 'post-value'}
-        self.assertEqual(repr(request), "<HttpRequest: GET '/somepath/'>")
+        self.assertEqual(repr(request), "<HttpRequest: GET b'/somepath/'>")
 
     def test_httprequest_repr_invalid_method_and_path(self):
         request = HttpRequest()
@@ -98,15 +98,16 @@ class RequestHeaderTests(unittest.TestCase):
         #Confirm Request Headers
         http_request.parse_request_header()
         request_headers = http_request.META[MetaDict.Info.REQ_HEADERS]
-        self.assertEqual("www.knowhere123.com", http_request.get_host())
-        self.assertListEqual(["image/gif, image/jpeg, */*"], request_headers.getlist('Accept'))
-        self.assertListEqual(["en-us"], request_headers.getlist('Accept-Language'))
-        self.assertListEqual(["gzip, deflate"], request_headers.getlist('Accept-Encoding'))
-        self.assertListEqual(["cookie1=value1, cookie2=value2", "cookie3=value3, cookie4=value4"], request_headers.getlist('Cookies'))
-        self.assertListEqual(["Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"], request_headers.getlist('User-Agent'))
-        self.assertListEqual(["830543"], request_headers.getlist('Content-Length'))
-        self.assertListEqual(["image/gif, image/jpeg, */*"], request_headers.getlist('Accept'))
-        self.assertListEqual(["830543"], request_headers.getlist('Content-Length'))
+        self.assertEqual(b"www.knowhere123.com", http_request.get_host())
+        self.assertListEqual([b"image/gif, image/jpeg, */*"], request_headers.getlist(b'Accept'))
+        self.assertListEqual([b"en-us"], request_headers.getlist(b'Accept-Language'))
+        self.assertListEqual([b"gzip, deflate"], request_headers.getlist(b'Accept-Encoding'))
+        self.assertListEqual([b"cookie1=value1, cookie2=value2", b"cookie3=value3, cookie4=value4"], request_headers.getlist(b'Cookies'))
+        self.assertListEqual([b"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"], request_headers.getlist(b'User-Agent'))
+        self.assertListEqual([b"830543"], request_headers.getlist(b'Content-Length'))
+        self.assertListEqual([b"image/gif, image/jpeg, */*"], request_headers.getlist(b'Accept'))
+        self.assertListEqual([b"830543"], request_headers.getlist(b'Content-Length'))
+        #TODO: Why's this not of type bytes?
         self.assertEqual("multipart/form-data", http_request.content_type)
         self.assertIsNone(http_request.content_params)
 
@@ -122,11 +123,11 @@ class RequestHeaderTests(unittest.TestCase):
         http_request.parse_request_header()
 
         #Request line meta data check
-        self.assertEqual("PUT", http_request.get_method())
-        self.assertEqual("UNKNOWN", http_request.get_scheme())
-        self.assertEqual("/caf%C3%A9/upload", http_request.get_path())
-        self.assertEqual("HTTP/1.1", http_request.get_protocol_info())
-        self.assertEqual("65536", http_request.get_port())
+        self.assertEqual(b"PUT", http_request.get_method())
+        self.assertEqual(b"UNKNOWN", http_request.get_scheme())
+        self.assertEqual(b"/caf%C3%A9/upload", http_request.get_path())
+        self.assertEqual(b"HTTP/1.1", http_request.get_protocol_info())
+        self.assertEqual(b"65536", http_request.get_port())
 
         #close the file/stream
         request_stream.close()
@@ -140,7 +141,7 @@ class RequestHeaderTests(unittest.TestCase):
         http_request.parse_request_header()
 
         #URL encoded UTF-8
-        self.assertEqual("UNKNOWN://www.knowhere123.com/caf%C3%A9/upload", http_request.get_uri())
+        self.assertEqual(b"UNKNOWN://www.knowhere123.com/caf%C3%A9/upload", http_request.get_uri())
         #get RAW URI
         #café here is UTF-8 encoded, so when get_uri(raw=True) returns,
         #the representation of the returned value should be same as the UTF-8
@@ -161,10 +162,10 @@ class RequestHeaderTests(unittest.TestCase):
         http_request.parse_request_header()
 
         #URI/path string (excluding querys tring) set/reset test
-        self.assertEqual("UNKNOWN://www.knowhere123.com/caf%C3%A9/upload", http_request.get_uri())
+        self.assertEqual(b"UNKNOWN://www.knowhere123.com/caf%C3%A9/upload", http_request.get_uri())
         new_international_path = "/سلام/this%/is$*()$!@/a/new/path/Name/Müeller"
         http_request.set_path(new_international_path)
-        self.assertEqual("UNKNOWN://www.knowhere123.com/%D8%B3%D9%84%D8%A7%D9%85/this%/is$*()$!@/a/new/path/Name/M%C3%BCeller", http_request.get_uri())
+        self.assertEqual(b"UNKNOWN://www.knowhere123.com/%D8%B3%D9%84%D8%A7%D9%85/this%/is$*()$!@/a/new/path/Name/M%C3%BCeller", http_request.get_uri())
         self.assertEqual("UNKNOWN://www.knowhere123.com/سلام/this%/is$*()$!@/a/new/path/Name/Müeller", http_request.get_uri(raw=True))
         #print http_request.get_uri()
 
@@ -258,13 +259,13 @@ class RequestHeaderTests(unittest.TestCase):
         #Confirm Request Headers
         http_request.parse_request_header()
         request_headers = http_request.META[MetaDict.Info.REQ_HEADERS]
-        self.assertEqual("www.knowhere123.com", http_request.get_host())
-        self.assertListEqual(["image/gif, image/jpeg, */*"], request_headers.getlist('Accept'))
-        self.assertListEqual(["en-us"], request_headers.getlist('Accept-Language'))
-        self.assertListEqual(["gzip, deflate"], request_headers.getlist('Accept-Encoding'))
-        self.assertListEqual(["cookie1=value1, cookie2=value2", "cookie3=value3, cookie4=value4"], request_headers.getlist('Cookies'))
-        self.assertListEqual(["Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"], request_headers.getlist('User-Agent'))
-        self.assertListEqual(["830543"], request_headers.getlist('Content-Length'))        
+        self.assertEqual(b"www.knowhere123.com", http_request.get_host())
+        self.assertListEqual([b"image/gif, image/jpeg, */*"], request_headers.getlist(b'Accept'))
+        self.assertListEqual([b"en-us"], request_headers.getlist(b'Accept-Language'))
+        self.assertListEqual([b"gzip, deflate"], request_headers.getlist(b'Accept-Encoding'))
+        self.assertListEqual([b"cookie1=value1, cookie2=value2", b"cookie3=value3, cookie4=value4"], request_headers.getlist(b'Cookies'))
+        self.assertListEqual([b"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"], request_headers.getlist(b'User-Agent'))
+        self.assertListEqual([b"830543"], request_headers.getlist(b'Content-Length'))        
         self.assertEqual("multipart/form-data", http_request.content_type)
         self.assertIsNone(http_request.content_params)
 
@@ -278,11 +279,11 @@ class RequestHeaderTests(unittest.TestCase):
         http_request.parse_request_header()
         http_request.parse_request_body()
         request_headers = http_request.META[MetaDict.Info.REQ_HEADERS]
-        self.assertEqual("www.knowhere484.com", http_request.get_host())        
-        self.assertListEqual(["en-us"], request_headers.getlist('Accept-Language'))
-        self.assertListEqual(["gzip, deflate"], request_headers.getlist('Accept-Encoding'))
-        self.assertListEqual(["cookie3=value3, cookie4=value4"], request_headers.getlist('Cookies'))
-        self.assertListEqual(["Safari/4.0 (compatible; MSIE5.01; Linux Blah)"], request_headers.getlist('User-Agent'))
+        self.assertEqual(b"www.knowhere484.com", http_request.get_host())        
+        self.assertListEqual([b"en-us"], request_headers.getlist(b'Accept-Language'))
+        self.assertListEqual([b"gzip, deflate"], request_headers.getlist(b'Accept-Encoding'))
+        self.assertListEqual([b"cookie3=value3, cookie4=value4"], request_headers.getlist(b'Cookies'))
+        self.assertListEqual([b"Safari/4.0 (compatible; MSIE5.01; Linux Blah)"], request_headers.getlist(b'User-Agent'))
         self.assertEqual("application/x-www-form-urlencoded", http_request.content_type)
         self.assertIsNone(http_request.content_params)
 
@@ -510,10 +511,10 @@ class RequestTests(unittest.TestCase):
         #Change Content-Type
         request_headers = http_request.META['REQUEST_HEADERS']
         request_headers._mutable = True
-        request_headers.setlist('Content-Type','application/x-www-form-urlencoded')
+        request_headers.setlist(b'Content-Type',b'application/x-www-form-urlencoded')
         with self.assertRaises(MultiPartParserError) as mPPE_Exception:
             http_request.parse_request_body()
-        self.assertEqual('Invalid Content-Type: application/x-www-form-urlencoded', mPPE_Exception.exception.args[0])
+        self.assertEqual("Invalid Content-Type: b'application/x-www-form-urlencoded'", mPPE_Exception.exception.args[0])
         
         #close the file
         http_request_stream.close()

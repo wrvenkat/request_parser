@@ -81,7 +81,7 @@ class UploadHandlerTest(unittest.TestCase):
         x = in_memory_file.read()
 
         self.assertTrue(isinstance(in_memory_file, InMemoryUploadedFile))
-        self.assertEqual("kitten.jpg", in_memory_file.name)
+        self.assertEqual(b"kitten.jpg", in_memory_file.name)
 
     def test_in_memory_upload_inactive(self):
         """
@@ -164,7 +164,7 @@ class UploadHandlerTest(unittest.TestCase):
 
         self.assertTrue(isinstance(temp_upload_file, TemporaryUploadedFile))
         file_name, file_extension = splitext(temp_upload_file.name)
-        self.assertEqual(".jpg", file_extension)
+        self.assertEqual(b".jpg", file_extension)
     
     def test_convenient_file_upload_in_memory(self):
         """
@@ -208,7 +208,7 @@ class UploadHandlerTest(unittest.TestCase):
         in_memory_file = convenient_upload_handler.file_complete(total_chunk_length)        
 
         self.assertTrue(isinstance(in_memory_file, InMemoryUploadedFile))
-        self.assertEqual("kitten.jpg", in_memory_file.name)
+        self.assertEqual(b"kitten.jpg", in_memory_file.name)
 
     def test_convenient_file_upload_to_disk(self):
         """
@@ -255,6 +255,6 @@ class UploadHandlerTest(unittest.TestCase):
 
         self.assertTrue(isinstance(on_disk_file, TemporaryUploadedFile))
         file_name, file_extension = splitext(on_disk_file.name)
-        self.assertEqual(".jpg", file_extension)    
+        self.assertEqual(b".jpg", file_extension)    
 
 unittest.main()

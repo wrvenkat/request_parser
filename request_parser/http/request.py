@@ -130,11 +130,11 @@ class HttpRequest(object,):
         return self.host
     
     def get_port(self):
-        return str(self.port)
+        return self.port
 
     def get_full_path(self, force_append_slash=False, raw=False):
         if raw:
-            _path = self._get_full_path(self.get_path(), force_append_slash)
+            _path = self._get_full_path(self.get_path(), force_append_slash).decode('utf-8')
             return uri_to_iri(_path)            
         else:
             return self._get_full_path(self.get_path(), force_append_slash).encode('ascii', errors='replace')
@@ -469,7 +469,7 @@ class HttpRequest(object,):
                 port = 80
             else:
                 #invalid port no.
-                port = bytes(65536)
+                port = b'65536'
         self.port = port
 
         self.method = meta_dict[MetaDict.ReqLine.METHOD]
@@ -523,7 +523,7 @@ class HttpRequest(object,):
             return
         body_stream.unget(data)
         
-        if self.content_type == b'multipart/form-data':      
+        if self.content_type == 'multipart/form-data':      
             try:
                 #returns POST QueryDict and MultiValueDict for _files
                 self._post, self._files = self._parse_file_upload(self.META.get(MetaDict.Info.REQ_HEADERS), body_stream)
@@ -534,7 +534,7 @@ class HttpRequest(object,):
                 # attempts to parse POST data again.
                 self._mark_post_parse_error()
                 raise
-        elif self.content_type == b'application/x-www-form-urlencoded':
+        elif self.content_type == 'application/x-www-form-urlencoded':
             #if the content-type is of form-urlencoded, then all we need to do is to parse the body
             #as a key-value pair. This gives our _post and an empty _files of MultiValueDict
             self._post, self._files = QueryDict(self.settings, self.body(), encoding=self.encoding), MultiValueDict()
@@ -543,8 +543,8 @@ class HttpRequest(object,):
             self._post, self._files = QueryDict(self.settings, encoding=self.encoding), MultiValueDict()
         
         #restart content-type check
-        if self.content_type == b'text/plain' or self.content_type == b'text/html'\
-            or self.content_type == b'application/json':
+        if self.content_type == 'text/plain' or self.content_type == 'text/html'\
+            or self.content_type == 'application/json':
             self._body = self.body().decode(self.encoding)
         else:
             self._body = self.body().decode(self.encoding)

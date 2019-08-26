@@ -14,15 +14,15 @@ class MultiValueDict(dict):
     >>> d = MultiValueDict({'name': ['Adrian', 'Simon'], 'position': ['Developer']})
     >>> d['name']
     'Simon'
-    >>> d.getlist('name')
+    >>> d.getlist(b'name')'
     ['Adrian', 'Simon']
-    >>> d.getlist('doesnotexist')
+    >>> d.getlist(b'doesnotexist')'
     []
-    >>> d.getlist('doesnotexist', ['Adrian', 'Simon'])
+    >>> d.getlist(b'doesnotexist', ['Adrian', 'Simon'])'
     ['Adrian', 'Simon']
     >>> d.get('lastname', 'nonexistent')
     'nonexistent'
-    >>> d.setlist('lastname', ['Holovaty', 'Willison'])
+    >>> d.setlist(b'lastname', ['Holovaty', 'Willison'])'
 
     This class exists to solve the irritating problem raised by cgi.parse_qs,
     which returns a list for every key, even though most Web forms submit
