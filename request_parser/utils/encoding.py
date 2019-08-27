@@ -96,6 +96,9 @@ def uri_to_iri(uri):
     if not uri:
         return uri
     
+    if not isinstance(uri, str):
+        uri = uri.decode('utf-8')
+    
     #encode the provided bytes/string to UTF-8
     #uri = str(uri).encode('utf-8')
 
