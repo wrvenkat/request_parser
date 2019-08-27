@@ -114,7 +114,7 @@ class HttpRequest(object,):
         if self.path:
             return self.path
         else:
-            return ''
+            return b''
 
     def get_method(self):
         return self.method
