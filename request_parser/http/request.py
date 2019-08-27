@@ -137,7 +137,7 @@ class HttpRequest(object,):
             _path = self._get_full_path(self.get_path(), force_append_slash)#.decode('utf-8')
             return uri_to_iri(_path)            
         else:
-            return self._get_full_path(self.get_path(), force_append_slash).encode('ascii', errors='replace')
+            return self._get_full_path(self.get_path(), force_append_slash)
 
     def _get_full_path(self, path, force_append_slash):
         """
@@ -145,13 +145,21 @@ class HttpRequest(object,):
         """
         # RFC 3986 requires query string arguments to be in the ASCII range.
         # Rather than crash if this doesn't happen, we encode defensively.
-        return '%s%s%s' % (
+        #return '%s%s%s' % (
             #add a '/' if force_append_slash is true and the path doesn't end with '/'
             #also, since anything in self.path is assumed to be safe and final, we don't perform any further encoding
-            escape_uri_path(path, encode_percent=False),
-            '/' if force_append_slash and not path.endswith('/') else '',
-            ('?' + iri_to_uri(self.META.get(MetaDict.ReqLine.QUERY_STRING, ''))) if self.META.get(MetaDict.ReqLine.QUERY_STRING, '') else ''
-        )
+        part1 = escape_uri_path(path, encode_percent=False)
+        part2 = b'/' if force_append_slash and not path.endswith(b'/') else b''
+        x = iri_to_uri(self.META.get(MetaDict.ReqLine.QUERY_STRING, b''))
+        part3 = b''.join([b'?', x.encode('ascii')]) if self.META.get(MetaDict.ReqLine.QUERY_STRING, b'') else b''
+        #)
+        part1_1 = b''
+        if isinstance(part1, str):
+            part1_1 = part1.encode('ascii')
+        else:
+            part1_1 = part1
+        y = b''.join([part1_1, part2, part3])
+        return y
 
     def get_uri(self, raw=False):
         """
@@ -159,7 +167,7 @@ class HttpRequest(object,):
         """
         scheme=self.scheme
         host=self.host
-        path = self.get_full_path(raw=True) if raw else self.get_full_path()
+        path = self.get_full_path(raw=raw)
         orig = '{scheme}://{host}{path}'.format(
             scheme=self.scheme,
             host=self.host,

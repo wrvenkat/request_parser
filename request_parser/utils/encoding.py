@@ -85,8 +85,8 @@ def iri_to_uri(iri):
         return iri
     #WARNING: The following 2 line might come to bite back - have to pay some attentions
     #elif isinstance(iri, Promise):
-    else:
-        iri = str(iri)
+    #else:
+    #    iri = str(iri)
     return quote(iri, safe="/#%[]=:;$&()+,!?*@'~")
 
 def uri_to_iri(uri):
