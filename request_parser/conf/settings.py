@@ -39,16 +39,16 @@ class Settings:
         'request_parser.files.uploadhandler.ConvenientFileUploadHandler',
     ]
 
-    def __init__(self, settings_dict=None):
+    def __init__(self, settings_dict=None, check_presence=False):
         if not settings_dict or type(settings_dict) != dict:
             return
 
-        default_settings = Settings.default()
+        default_settings = Settings.default(check_presence=check_presence)
 
         #FILE_UPLOAD_DIR
         if Settings.Key.FILE_UPLOAD_DIR in settings_dict:
                 self.FILE_UPLOAD_TEMP_DIR = settings_dict[Settings.Key.FILE_UPLOAD_DIR]
-                self.FILE_UPLOAD_TEMP_DIR = self._check_upload_dir()
+                self.FILE_UPLOAD_TEMP_DIR = self._check_upload_dir(check_presence=True)
         else:
             self.FILE_UPLOAD_TEMP_DIR = default_settings.FILE_UPLOAD_TEMP_DIR
 
@@ -83,7 +83,7 @@ class Settings:
             self.DEFAULT_CHARSET = default_settings.DEFAULT_CHARSET
     
     @classmethod
-    def default(cls):
+    def default(cls, check_presence=False):
         settings = Settings()
 
         #Directory where file upload files will be stored
@@ -110,11 +110,11 @@ class Settings:
         #Default charset per HTTP 1.1 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
         settings.DEFAULT_CHARSET = 'ISO-8859-1'
         
-        settings.FILE_UPLOAD_TEMP_DIR = settings._check_upload_dir()
+        settings.FILE_UPLOAD_TEMP_DIR = settings._check_upload_dir(check_presence=check_presence)
 
         return settings
 
-    def _check_upload_dir(self):
+    def _check_upload_dir(self, check_presence=False):
         """
         Method that canonicalizes the FILE_UPLOAD_DIR if required and checks for permission issues.
         """
@@ -128,20 +128,22 @@ class Settings:
             #FILE_UPLOAD_TEMP_DIR in the path
             file_upload_dir = get_abs_path(file_upload_dir)
         
-        #check permission for creating directory and writing files
-        try:
-            #check if directory exists if not create
-            if not isdir(file_upload_dir):
-                mkdir(file_upload_dir)
-                        
-            test_file_path = join(file_upload_dir, "acdr423x.tmp")        
-            test_file = open(test_file_path, "w+")
-            test_file.write("Permissions Check!")
-            test_file.close()
-            remove(test_file_path)
-            return file_upload_dir
-        except IOError as ioError:
-            if ioError.errno == errno.EACCES:
-                raise InvalidDirectory("No write permissions to directory: {}".format(file_upload_dir))
-            else:
-                raise InvalidDirectory("Error: Invalid directory: {}".format(file_upload_dir))
+        if check_presence:
+            #check permission for creating directory and writing files
+            try:
+                #check if directory exists if not create
+                if not isdir(file_upload_dir):
+                    mkdir(file_upload_dir)
+                            
+                test_file_path = join(file_upload_dir, "acdr423x.tmp")        
+                test_file = open(test_file_path, "w+")
+                test_file.write("Permissions Check!")
+                test_file.close()
+                remove(test_file_path)                
+            except IOError as ioError:
+                if ioError.errno == errno.EACCES:
+                    raise InvalidDirectory("No write permissions to directory: {}".format(file_upload_dir))
+                else:
+                    raise InvalidDirectory("Error: Invalid directory: {}".format(file_upload_dir))
+        
+        return file_upload_dir
