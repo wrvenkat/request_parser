@@ -14,6 +14,6 @@ install:
   - pip install six
   - pip install future
 script:
-  python -m request_parser.tests.requests.requests
-  python -m request_parser.tests.settings.settings
-  python -m request_parser.tests.uploadhandlers.uploadhandlers
+  - python -m request_parser.tests.requests.requests
+  - python -m request_parser.tests.settings.settings
+  - python -m request_parser.tests.uploadhandlers.uploadhandlers
