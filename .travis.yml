@@ -28,5 +28,20 @@ matrix:
 #        - choco install python2
 #        - python -m pip install --upgrade pip
 #      env: PATH=/c/Python27:/c/Python27/Scripts:$PATH
-#    - name: "Jython on Windows"
-#      os: windows
+    - name: "Jython on OSX"
+      os: osx
+      language: shell
+      jdk:
+        - oraclejdk6
+      before_install:
+        - mkdir ~/Downloads/Jython
+        - mkdir ~/Downloads/Jython/Lib
+        - wget -O ~/Downloads/Jython/jython.jar https://repo1.maven.org/maven2/org/python/jython-standalone/2.7.1/jython-standalone-2.7.1.jar
+        - wget -O ~/Downloads/future.tar.gz https://files.pythonhosted.org/packages/90/52/e20466b85000a181e1e144fd8305caf2cf475e2f9674e797b222f8105f5f/future-0.17.1.tar.gz
+        - wget -O ~/Downloads/six.tar.gz https://files.pythonhosted.org/packages/dd/bf/4138e7bfb757de47d1f4b6994648ec67a51efe58fa907c1e11e350cddfca/six-1.12.0.tar.gz
+        - cd ~/Downloads/
+        - tar -xvzf future.tar.gz && mv future/src/future ~/Downloads/Jython/Lib
+        - tar -xvzf six.tar.gz && mv six/six.py ~/Downloads/Jython/Lib
+        - cd ~
+      install:
+        "./travis/run-jython-tests.sh"
