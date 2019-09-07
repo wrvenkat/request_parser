@@ -42,9 +42,8 @@ matrix:
         - cd ~/Downloads/
         - pwd
         - mkdir future
-        - mkdir six
-        - ls -l
-        - tar -xzf future.tar.gz -C future --strip-components 1 && pwd && ls -l && pwd && cd .. && ls -l && pwd
+        - mkdir six        
+        - tar -xzf future.tar.gz -C future --strip-components 1 && cd future && ls -l && pwd && ls -l && pwd && cd .. && ls -l && pwd
         #- cp future/src/future/ ~/Downloads/Jython/Lib/
         #- tar -xvzf six.tar.gz -C six --strip-components 1 && pwd && cd .. && pwd
         #- cp six/six.py ~/Downloads/Jython/Lib/
