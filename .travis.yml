@@ -42,8 +42,8 @@ matrix:
         - cd ~/Downloads/
         - mkdir future
         - mkdir six
-        - tar -xzf future.tar.gz -C future --strip-componentes 1 && cd .. && mv future/src/future/ ~/Downloads/Jython/Lib/
-        - tar -xzf six.tar.gz -C six --strip-componentes 1 & cd .. && mv six/six.py ~/Downloads/Jython/Lib/
+        - tar -xzf future.tar.gz -C future --strip-components 1 && cd .. && mv future/src/future/ ~/Downloads/Jython/Lib/
+        - tar -xzf six.tar.gz -C six --strip-components 1 & cd .. && mv six/six.py ~/Downloads/Jython/Lib/
         - cd ~
       install:
         "./travis/run-jython-tests.sh"
