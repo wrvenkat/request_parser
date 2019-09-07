@@ -66,7 +66,7 @@ class HttpRequest(object,):
         self._stream = LazyStream(self._stream)
 
         #take care of settings to use default settings
-        if settings:
+        if settings is not None:
             self.settings = settings
         else:
             self.settings = Settings.default()        

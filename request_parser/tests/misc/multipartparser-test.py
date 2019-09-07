@@ -4,7 +4,7 @@ from request_parser.http.multipartparser import MultiPartParser
 from request_parser.files import uploadhandler, utils
 from request_parser.conf.settings import Settings
 
-def test1():    
+def test1():
     settings_upload_handlers = [
         #hold uploaded files in-memory
         'request_parser.files.uploadhandler.MemoryFileUploadHandler',
