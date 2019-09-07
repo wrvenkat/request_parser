@@ -1,0 +1,19 @@
+language: python
+matrix:
+  include:
+    - name: "Python 2.7 on Ubuntu 16.04"
+      os: precise
+      python: 2.7
+    - name: "Python 2.7 on OSX"
+      os: osx
+      language: shell
+    - name: "Python 2.7 on Windows"
+      os: windows
+      language: shell
+install:
+  pip install six
+  pip install future
+script:
+  python -m request_parser.tests.requests.requests
+  python -m request_parser.tests.settings.settings
+  python -m request_parser.tests.uploadhandlers.uploadhandlers
