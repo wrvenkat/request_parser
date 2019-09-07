@@ -11,8 +11,8 @@ matrix:
       os: windows
       language: shell
 install:
-  pip install six
-  pip install future
+  - pip install six
+  - pip install future
 script:
   python -m request_parser.tests.requests.requests
   python -m request_parser.tests.settings.settings
