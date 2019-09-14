@@ -15,9 +15,6 @@ from urllib.parse import (
 from request_parser.exceptions.exceptions import TooManyFieldsSent
 from request_parser.utils.datastructures import MultiValueDict
 
-#Python 2 replacement for raise_from
-from six import reraise as raise_
-
 # based on RFC 7232, Appendix C
 ETAG_MATCH = re.compile(r'''
     \A(      # start of string and capture group
@@ -168,8 +165,8 @@ def parse_http_date(date):
         result = datetime.datetime(year, month, day, hour, min, sec)
         return calendar.timegm(result.utctimetuple())
     except Exception as exc:
-        #raise ValueError("%r is not a valid date" % date) from exc
-        raise_(ValueError("%r is not a valid date" % date), exc)
+        raise ValueError("%r is not a valid date" % date) from exc
+        #raise_(ValueError("%r is not a valid date" % date), exc)
 
 
 def parse_http_date_safe(date):

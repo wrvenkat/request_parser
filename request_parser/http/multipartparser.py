@@ -8,7 +8,6 @@ import base64
 import binascii
 import cgi
 
-from six import reraise as raise_from
 from urllib.parse import unquote
 
 from request_parser.conf.settings import Settings
@@ -268,7 +267,7 @@ class MultiPartParser:
                                     chunk = base64.b64decode(stripped_chunk)
                                 except Exception as exc:
                                     # Since this is only a chunk, any error is an unfixable error.                                
-                                    raise_from(MultiPartParserError("Could not decode base64 data."), exc)
+                                    raise MultiPartParserError("Could not decode base64 data.") from exc
 
                             for i, handler in enumerate(handlers):
                                 chunk_length = len(chunk)

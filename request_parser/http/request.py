@@ -15,9 +15,7 @@ from request_parser.http.multipartparser import MultiPartParser, MultiPartParser
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict, ImmutableMultiValueDict
 from request_parser.utils.encoding import escape_uri_path, iri_to_uri, uri_to_iri
 from request_parser.utils.http import is_same_domain, limited_parse_qsl, _urlparse as urlparse
-from .constants import MetaDict
-
-from six import reraise as raise_
+from constants import MetaDict
 
 RAISE_ERROR = object()
 #validates a given string for a format of the form host:port
@@ -401,7 +399,7 @@ class HttpRequest(object,):
                     chunk = self.read(chunk_size)
                     read_size += len(chunk)
             except IOError as e:
-                raise_(UnreadablePostError(*e.args), e)
+                raise UnreadablePostError(*e.args) from e
             
             if read_size > self.settings.DATA_UPLOAD_MAX_MEMORY_SIZE:
                 raise RequestDataTooBig('Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.')
@@ -587,14 +585,14 @@ class HttpRequest(object,):
         try:
             return self._stream.read(*args, **kwargs)
         except IOError as e:
-            raise_(UnreadablePostError(*e.args), e)
+            raise UnreadablePostError(*e.args) from e
 
     def readline(self, *args, **kwargs):
         try:
             return self._stream.readline(*args, **kwargs)
         except IOError as e:
             #raise UnreadablePostError(*e.args) from e
-            raise_(UnreadablePostError(*e.args), e)
+            raise UnreadablePostError(*e.args) from e
 
     def __iter__(self):
         return iter(self.readline, b'')
