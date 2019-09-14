@@ -15,7 +15,7 @@ from request_parser.http.multipartparser import MultiPartParser, MultiPartParser
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict, ImmutableMultiValueDict
 from request_parser.utils.encoding import escape_uri_path, iri_to_uri, uri_to_iri
 from request_parser.utils.http import is_same_domain, limited_parse_qsl, _urlparse as urlparse
-from constants import MetaDict
+from .constants import MetaDict
 
 RAISE_ERROR = object()
 #validates a given string for a format of the form host:port
