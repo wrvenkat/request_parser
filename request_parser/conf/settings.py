@@ -92,7 +92,7 @@ class Settings:
 
         #Directory where file upload files will be stored
         #default directory is relative to the module.
-        settings.FILE_UPLOAD_TEMP_DIR = 'files/file_uploads'
+        settings.FILE_UPLOAD_TEMP_DIR = join('files','file_uploads')
 
         #max header size of a header
         settings.MAX_HEADER_SIZE = 16
