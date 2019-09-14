@@ -1,17 +1,13 @@
 language: python
 matrix:
   include:
-    - name: "Python 3.x, x >= 5 <= 7 on Ubuntu 16.04"
+    - name: "Python 3.7 on Ubuntu 16.04"
       os: precise
       python:
-        - "3.5"
-        - "3.6"
         - "3.7"
-    - name: "Python 3.x, x >= 5 <= 7 on OSX"
+    - name: "Python 3.7 on OSX"
       os: osx
-      python:
-        - "3.5"
-        - "3.6"
+      python:        
         - "3.7"
     - name: "Python 3.7 on Windows"
       os: windows
