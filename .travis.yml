@@ -1,0 +1,26 @@
+language: python
+matrix:
+  include:
+    - name: "Python 3.x, x >= 5 <= 7 on Ubuntu 16.04"
+      os: precise
+      python:
+        - "3.5"
+        - "3.6"
+        - "3.7"      
+    - name: "Python 3.x, x >= 5 <= 7 on OSX"
+      os: osx
+      python:
+        - "3.5"
+        - "3.6"
+        - "3.7"
+    - name: "Python 3.7 on Windows"
+      os: windows
+      language: shell
+      before_install:
+        - choco install python
+        - python -m pip install --upgrade pip
+      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
+script:
+  - python -m request_parser.tests.requests.requests
+  - python -m request_parser.tests.settings.settings
+  - python -m request_parser.tests.uploadhandlers.uploadhandlers  
