@@ -1,5 +1,9 @@
 from os.path import normpath, isdir, join, isabs
-from os import errno, mkdir, remove
+from os import mkdir, remove
+try:
+    from os import errno
+except ImportError:
+    import errno    
 from request_parser.files.utils import get_abs_path
 
 class InvalidDirectory(Exception):
