@@ -114,7 +114,7 @@ class Settings:
         #Default charset per HTTP 1.1 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
         settings.DEFAULT_CHARSET = 'ISO-8859-1'
         
-        settings.FILE_UPLOAD_TEMP_DIR = settings._check_upload_dir()
+        settings.FILE_UPLOAD_TEMP_DIR = settings._check_upload_dir(check_presence=check_presence)
 
         return settings
 
