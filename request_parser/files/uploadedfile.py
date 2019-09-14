@@ -54,9 +54,12 @@ class TemporaryUploadedFile(UploadedFile, object):
     """
     A file uploaded to a temporary location (i.e. stream-to-disk).
     """
-    def __init__(self, name, content_type, size, charset, settings = Settings.default(), content_type_extra=None, transfer_encoding=None):
+    def __init__(self, name, content_type, size, charset, settings = None, content_type_extra=None, transfer_encoding=None):
         _, ext = os.path.splitext(name)
-        file = tempfile.NamedTemporaryFile(suffix='.upload' + ext, dir=settings.FILE_UPLOAD_TEMP_DIR)
+        _settings = settings
+        if _settings is None:
+            _settings = Settings.default()
+        file = tempfile.NamedTemporaryFile(suffix='.upload' + ext, dir=_settings.FILE_UPLOAD_TEMP_DIR)
         super(TemporaryUploadedFile, self).__init__(file, name, content_type, size, charset, content_type_extra, transfer_encoding)
 
     def temporary_file_path(self):
