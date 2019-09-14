@@ -1,6 +1,6 @@
 import unittest
 from platform import system
-from os import rmdir
+from os import rmdir, path
 
 from request_parser.conf.settings import Settings, InvalidDirectory
 from request_parser.files.utils import get_abs_path
@@ -12,7 +12,7 @@ class SettingsTests(unittest.TestCase):
 
     def test_file_upload_directory(self):
         settings = Settings.default()
-        self.assertIn("files/file_uploads", settings.FILE_UPLOAD_TEMP_DIR)
+        self.assertIn(path.join('files', 'file_uploads'), settings.FILE_UPLOAD_TEMP_DIR)
 
         #if it's Linux or Mac
         if system() == 'Linux' or system() == 'Darwin':
@@ -34,7 +34,7 @@ class SettingsTests(unittest.TestCase):
         self.assertTrue(hasattr(default_setting, "DEFAULT_CHARSET"))
 
         #confirm the values
-        self.assertIn('files/file_uploads', default_setting.FILE_UPLOAD_TEMP_DIR)
+        self.assertIn(path.join('files', 'file_uploads'), default_setting.FILE_UPLOAD_TEMP_DIR)
         self.assertEqual(16, default_setting.MAX_HEADER_SIZE)
         self.assertEqual(30 * ((2 ** 10) * (2 ** 10)), default_setting.FILE_UPLOAD_MAX_MEMORY_SIZE)
         self.assertEqual(5 * ((2 ** 10) * (2 ** 10)), default_setting.DATA_UPLOAD_MAX_MEMORY_SIZE)
