@@ -142,7 +142,7 @@ class UploadHandlerTest(unittest.TestCase):
                                                     None, 
                                                     self.test_file_size,
                                                     None,
-                                                    Settings.default(),
+                                                    Settings.default(check_presence=True),
                                                     None
                                                 )
         
@@ -220,7 +220,7 @@ class UploadHandlerTest(unittest.TestCase):
 
         #set max in memory to 500KB
         max_in_memory_size = 500 * (2 ** 10)
-        custom_settings = Settings({Settings.Key.FILE_UPLOAD_MAX_MEMORY : max_in_memory_size})
+        custom_settings = Settings({Settings.Key.FILE_UPLOAD_MAX_MEMORY : max_in_memory_size}, check_presence=True)
 
         #get the convenient upload handler
         #reload it!
