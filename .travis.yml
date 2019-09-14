@@ -4,7 +4,7 @@ matrix:
     - name: "Python 3.7 on Ubuntu 16.04"
       os: precise
       python:
-        - "3.6"
+        - "3.7"
     - name: "Python 3.7 on OSX"
       os: osx
       osx_image: xcode11
