@@ -8,7 +8,11 @@ matrix:
     - name: "Python 3.7 on OSX"
       os: osx
       osx_image: xcode11
-      language: shell      
+      language: shell
+      script:
+        - python3 -m request_parser.tests.requests.requests
+        - python3 -m request_parser.tests.settings.settings
+        - python3 -m request_parser.tests.uploadhandlers.uploadhandlers
     - name: "Python 3.7 on Windows"
       os: windows
       language: shell
