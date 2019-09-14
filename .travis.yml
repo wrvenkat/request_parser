@@ -6,7 +6,7 @@ matrix:
       python:
         - "3.5"
         - "3.6"
-        - "3.7"      
+        - "3.7"
     - name: "Python 3.x, x >= 5 <= 7 on OSX"
       os: osx
       python:
@@ -23,4 +23,4 @@ matrix:
 script:
   - python -m request_parser.tests.requests.requests
   - python -m request_parser.tests.settings.settings
-  - python -m request_parser.tests.uploadhandlers.uploadhandlers  
+  - python -m request_parser.tests.uploadhandlers.uploadhandlers
