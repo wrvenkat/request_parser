@@ -39,7 +39,7 @@ It is also possible to use the `parse()` method of `HttpRequest` object to parse
 
 Following picture shows how the infromation contained in an `HttpRequest` object after successfully parsing a `multipart/form-data` request.  
 
-![alt text](.md/imgs/parsed_object.PNG)
+![alt text](.md/imgs/parsed_object.png)
 
 For more documentation, please see the wiki.
 
