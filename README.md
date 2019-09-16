@@ -37,7 +37,7 @@ def parse_request_example(request=None):
 ```
 It is also possible to use the `parse()` method of `HttpRequest` object to parse the request header and the body in a single call.
 
-Following picture shows how the infromation contained in an `HttpRequest` object after successfully parsing a `multipart/form-data` request.  
+Following picture shows how the infromation contained in an `HttpRequest` object looks like after successfully parsing a `multipart/form-data` request.  
 
 ![alt text](.md/imgs/parsed_object.png)
 
