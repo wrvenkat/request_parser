@@ -10,7 +10,7 @@ Requires [six](https://pypi.org/project/six/) and [future](https://pypi.org/proj
 pip install six
 pip install future
 ```
-### Example
+## Example
 To use the library, `git clone` the repository and copy the library directory `request_parser` to a location that is present in [PYTHONPATH](https://docs.python.org/2/using/cmdline.html#envvar-PYTHONPATH) or copy somewhere and add that location to `PYTHONPATH`.
 
 Once the library is setup, it can be used as shown below.
