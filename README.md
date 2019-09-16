@@ -35,7 +35,12 @@ def parse_request_example(request=None):
     # do stuff with parsed information from the HttpRequest object
     print "This is a request to: "+http_request.get_host()
 ```
-It is also possible to use the `parse()` method of `HttpRequest` object to parse the request header and the body in a single call.  
+It is also possible to use the `parse()` method of `HttpRequest` object to parse the request header and the body in a single call.
+
+Following picture shows how the infromation contained in an `HttpRequest` object after successfully parsing a `multipart/form-data` request.  
+
+![alt text](.md/imgs/parsed_object.PNG)
+
 For more documentation, please see the wiki.
 
 ### Miscellaneous
