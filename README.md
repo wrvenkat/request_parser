@@ -41,7 +41,7 @@ Following picture shows how the infromation contained in an `HttpRequest` object
 
 ![alt text](.md/imgs/parsed_object.png)
 
-For more documentation, please see the wiki.
+For more documentation, please see the [wiki](https://github.com/wrvenkat/request_parser/wiki).
 
 ### Miscellaneous
 The master branch is compatible only with Python 2.7. The `python3` branch works with Python 3.5 and above.
