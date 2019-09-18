@@ -1,8 +1,6 @@
 # request_parser
-request_parser is an HTTP request parsing library in Python.
-
-request_parser is created from [Django's HTTP](https://github.com/django/django/tree/master/django/http) package.  
-request_parser parses a provided request stream and creates an object through which various information about a request can be accessed.
+request_parser is an HTTP request parsing library in Python.  
+request_parser provides an easy API to access information in an HTTP request.
 ## Getting Started
 ### Dependencies
 Requires [six](https://pypi.org/project/six/) and [future](https://pypi.org/project/future/). These can be installed as below.
