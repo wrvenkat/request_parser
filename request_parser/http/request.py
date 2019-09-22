@@ -7,9 +7,7 @@ from urllib.parse import quote, urlencode
     #urljoin, urlsplit
 
 from request_parser.conf.settings import Settings
-from request_parser.exceptions.exceptions import (
-    ImproperlyConfigured, RequestDataTooBig,
-)
+from request_parser.exceptions.exceptions import RequestDataTooBig
 from request_parser.files import uploadhandler
 from request_parser.http.multipartparser import MultiPartParser, MultiPartParserError, parse_header, LazyStream
 from request_parser.utils.datastructures import ImmutableList, MultiValueDict, ImmutableMultiValueDict
