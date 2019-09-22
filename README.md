@@ -2,12 +2,6 @@
 request_parser is an HTTP request parsing library in Python providing an easy API to access information in HTTP requests.
 
 ## Getting Started
-### Dependencies
-Requires [six](https://pypi.org/project/six/) and [future](https://pypi.org/project/future/). These can be installed as below.
-```bash
-pip install six
-pip install future
-```
 ## Example
 To use the library, `git clone` the repository and copy the library directory `request_parser` to a location that is present in [PYTHONPATH](https://docs.python.org/2/using/cmdline.html#envvar-PYTHONPATH) or copy somewhere and add that location to `PYTHONPATH`.
 
