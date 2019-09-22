@@ -1,6 +1,7 @@
 # request_parser
 request_parser is an HTTP request parsing library in Python.  
-request_parser provides an easy API to access information in HTTP requests.
+request_parser provides an easy API to access information in HTTP requests.  
+Travis status: [![Build Status](https://travis-ci.org/wrvenkat/request_parser.svg?branch=master)](https://travis-ci.org/wrvenkat/request_parser)
 ## Getting Started
 ### Dependencies
 Requires [six](https://pypi.org/project/six/) and [future](https://pypi.org/project/future/). These can be installed as below.
